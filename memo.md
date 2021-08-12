@@ -1,6 +1,0 @@
-# memo
-
-## memo
-
-- memo
-- memo
