@@ -15,7 +15,9 @@
 - ローカルリポジトリにあるブランチ。コミットを指し示したポインタ。
 ## リモートブランチとはなんですか
 - リモートリポジトリにあるブランチ。リモートのブランチの状態へのポインタ。
-- ローカルで確認するには`git fetch <remote>/<branch>`をしてから`git branch -a`で参照できる。
+- ローカルで確認するには`git fetch <remote>/<branch>`をしてから`git branch -a`で参照できる。 
+  **→（注意）このブランチは一見リモートブランチだと勘違いしてしまいがちだが、実は追跡ブランチの名前！！ここの勘違いをしていたので確認**
+  [![Image from Gyazo](https://i.gyazo.com/97294741f470498042835cdbecfd4c21.png)](https://gyazo.com/97294741f470498042835cdbecfd4c21)
 ## コンフリクトとはなんですか。どういった場合におきますか。
 - コンフリクトとはGitがどのブランチのコードが正しいのか判断できない状態をいう。同じファイルの同じ行に対して異なる編集を行なった時に起きる。
 ## プルリクエストとはなんですか
@@ -26,3 +28,22 @@
 - 主に以下のようなファイルを入れる。
   - パスワードなどの機密性のあるファイル。
   - チームでの開発で必要ないもの。
+## git pull = git fetch + git merge
+リモートから情報を取得する方法は2つある。
+- git fetch + git merge
+- git pull
+### git fetch
+- リモートリポジトリのブランチ・コミットの情報を一緒にローカルリポジトリに取得するコマンド
+- **注意する点は、この段階ではローカルのブランチは更新してないこと。**
+### git merge
+- git fetchしてきて変更したブランチと指定したブランチを統合するコマンド。
+[![Image from Gyazo](https://i.gyazo.com/7fd650d3fa7b9f7512d64902c6fee1f8.png)](https://gyazo.com/7fd650d3fa7b9f7512d64902c6fee1f8)
+### git pull
+- git pullはリモートから情報を取得して、マージまでを一度にやりたい時に行うコマンド。
+- **注意点として現在いるブランチにマージされることを忘れないようにする。**
+[![Image from Gyazo](https://i.gyazo.com/c00a691502bf9981e55347ab44d89549.png)](https://gyazo.com/c00a691502bf9981e55347ab44d89549)
+[![Image from Gyazo](https://i.gyazo.com/5257edd1990aec8ce05a8a84494f404e.png)](https://gyazo.com/5257edd1990aec8ce05a8a84494f404e)
+
+> 参照
+> Git： もう怖くないGit！チーム開発で必要なGitを完全マスター｜山浦　清透｜https://www.udemy.com/course/unscared_git/
+> shin>>media｜https://shinmedia20.com/git-pull
