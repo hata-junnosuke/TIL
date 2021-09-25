@@ -157,19 +157,31 @@ services:
 
 ### 起動
 - `$docker-compose up`
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## 本番環境に公開しよう
+　　1〜3省略
+ ### 4.　DB追加
+ - `$heroku addons:create cleardb:ignite -a <appname>`・・herokuではDBをアドオンで追加する。（igniteは無料のもの）
+ - 環境変数を設定（database.ymlのproductionを変更する）
+ - 環境変数をherokuへ追加する（`$ heroku config:add ~~`）
+
+ ### 5.　Dockerfileを本番環境用に修正
+ - start.sh作成
+ - Dockerfile編集
+ - start.sh書き込み
+ - コンパイルの環境変数を追加
+ - herokuの読み込み時間変更
+ - サーバー削除、pidsの削除（エラー防止）
+ 
+ ### 6.　Dockerイメージをビルド・リリース
+ - `$ heroku container:push web -a <appname>`・・herokuのコンテナを作成、プッシュ
+ - `$ heroku container:release web -a <appname>`・・heroku上にコンテナをリリース
+ - `$ heroku run bundle exec rake db:migrate RAILS_ENV=production -a <appname>`・・`$ heroku run ~` で実行したいコマンドを使える。
+ - `$ heroku open`
+
+
+ ### 7.　機能追加
+ - ローカルでビューを作る
+ - Dockerイメージをビルド、リリースすることで更新
+
+
 ## CI/CDを構築しよう
