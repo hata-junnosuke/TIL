@@ -185,3 +185,117 @@ services:
 
 
 ## CI/CDを構築しよう
+### GitHub
+省略
+### CI・・プッシュされるたびにテストが実行され、品質が保たれるようになる。
+1. テストコードを記載
+- test/controllerに記載あり。コメントアウトを除いて、`assert: false`にしてテストが落ちるようにする。
+- `$ docker compose-up`
+- `$ docker-compose exec web bundle exec rake test`・・テストを実行する（失敗する）
+2. CircleCIに登録
+- サイトで登録
+- ここは動画の通りに
+3. プロジェクトを登録
+- ここも動画通りに
+4. configを設定
+- .circleci/config.ymlを作成
+```
+# まずは宣言
+version: 2.1
+orbs:
+  ruby: circleci/ruby@1.1.2
+  heroku: circleci/heroku@1.2.3
+# 
+jobs:
+  build:
+    docker:
+      - image: circleci/ruby:2.7
+    working_directory: ~/rails-docker-kyt/src　#ここはGitHubのリポジトリ名に揃える。
+    # jobの中身を記述
+    steps:
+      - checkout:
+          path: ~/rails-docker-kyt
+      - ruby/install-deps
+
+  test:
+    docker:
+      - image: circleci/ruby:2.7
+      - image: circleci/mysql:5.5
+        environment:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: app_test
+          MYSQL_USER: root
+    environment:
+      BUNDLE_JOBS: "3"
+      BUNDLE_RETRY: "3"
+      APP_DATABASE_HOST: "127.0.0.1"
+      RAILS_ENV: test
+    working_directory: ~/rails-docker-kyt/src
+    steps:
+      - checkout:
+          path: ~/rails-docker-kyt
+      - ruby/install-deps
+      - run:
+          name: Database setup
+          command: bundle exec rails db:migrate
+      - run:
+          name: test
+          command: bundle exec rake test
+
+  # ここは次のCDの時に記述する。
+  deploy:
+    docker:
+      - image: circleci/ruby:2.7
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+      - heroku/install
+      - run:
+          name: heroku login
+          command: heroku container:login
+      - run:
+          name: push docker image
+          command: heroku container:push web -a $HEROKU_APP_NAME
+      - run:
+          name: release docker image
+          command: heroku container:release web -a $HEROKU_APP_NAME
+      - run:
+          name: database setup
+          command: heroku run bundle exec rake db:migrate RAILS_ENV=production -a $HEROKU_APP_NAME
+# ここで順番を指定
+workflows:
+  version: 2
+  build_test_and_deploy:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only: main
+```
+5. 環境変数を設定
+- 動画通り
+6. GitHubにプッシュ
+- 動画見て、テストが落ちていることを確認
+7. テストを修正
+- `$ assert true`にする。これで成功
+
+### CD・・mainにマージされた時に自動でデプロイされるようになる。
+1. configを修正
+- 動画見て
+- `branches:only: main`でmainブランチにマージされた時のみデプロイされるようになる。
+2. 環境変数を設定
+- 動画見て
+3. Viewファイルを修正
+- 動画見て
+4. GitHubにプッシュ
+- マージしたらデプロイされているか確認
+5. マージ、デプロイ
+- ここでのデバックの方法は参考になるので注目。
+
