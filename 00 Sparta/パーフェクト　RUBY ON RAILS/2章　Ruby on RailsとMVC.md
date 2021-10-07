@@ -55,3 +55,70 @@ ActiveRecordで多対多を表現するには**中間モデル**を作成する�
 ## ActiveRecord::Enumで列挙型を扱う
 バリエーションが少ないならば数値で管理したほうが効率的。1なら販売中、2なら売り切れみたいに。Enum型はカラムに対してプログラム上別名を与えることができる。（modelに定義する）
 
+## コントローラーの役割
+### ブラウザからアプリケーションにアクセスしたときの流れ
+- コントローラーはURLのパスとルーティングから導かれたアクションの中で、モデルなどを通じて必要なデータを取得・加工する。
+- 最後にそのデータをビューに渡してレンダリングすることでWEBアプリケーションの画面をユーザーに返す役割を担う。
+
+### アクションに対してフックで処理を差し込む
+- フック・・アクションの前後に処理を差し込むことのできるコールバック処理のようなもの。フィルターと呼ぶこともある。
+```
+class BooksController < ApplicationController
+  protect_from_forgery except: [:destroy]
+  before_action :set_book,only:[:show,:destroy] <=これがフック　（これにより共通の処理を定義できてまとめられる）
+  
+  def show
+   
+    respond_to do |format|
+      format.html
+      fotmat.json
+    end
+  end
+  
+  def destroy
+    
+    @book.destroy
+    respond_to do |format|
+      format.html { redirect_to "/"}
+      fotmat.json {head :no_content}
+    end
+  end
+  
+  private
+  def set_book
+    @book = params[:id]
+  end
+end
+```
+- フックはonlyやexceptオプションで特定のアクションに対してのみ実行できる。
+- フックの一例  
+ [![Image from Gyazo](https://i.gyazo.com/76cc6a3641bac2a0ebc38f88a509c193.png)](https://gyazo.com/76cc6a3641bac2a0ebc38f88a509c193)
+ - aroundフックは呼び出すメソッドではbeforeの後yieldを使ってアクション側に処理を戻す必要がある。
+ - フックは`skip_before_action`などのようにスキップすることもできる。
+
+### ルーティングとリソース
+- CRUD操作は`resouces :publishers`の一行で書き、定義できる。
+- resoucesのブロックの中にresourcesを書くことで拡張することが可能
+- 反対にonlyでルーティングを制限することもできる。
+- ログインユーザーの自身のプロフィールのように1人のユーザーから見てアプリケーション上に1つしか存在しないリソースは`resource`で定義する。（こちらではindexが作成されない,idと紐づかない）
+
+### 例外処理
+[![Image from Gyazo](https://i.gyazo.com/95c274d7780cbde2e29e0e6c933047c9.png)](https://gyazo.com/95c274d7780cbde2e29e0e6c933047c9)
+- 特定の例外に対して挙動を指定したい場合`rescue_from`を使うことで実装できる。
+
+### Storong Paramater
+```
+def update
+ 略
+ user.update(user_params)
+end
+
+private
+ def user_params
+  params.require(:user).permit(:name, :email)
+ end
+end
+```
+user_paramsの中ではparamsからモデルの更新に利用して良いパラメータを明示している。
+- リクエストには:userというキーが必要
+- userの中で受け付けて良いのは「:name, :email」の2つのみ
