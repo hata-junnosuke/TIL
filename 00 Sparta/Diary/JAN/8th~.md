@@ -145,6 +145,20 @@ sorceryを導入してログイン機能を実装する
 - i18nの基本設定
   - config/appに記述
 - jqueryとpopperの追加（ブートストラップのため）
+- ログイン機能
+  - app.scssにcss記述
+  - controller/appにフラッシュタイプを記述
+  - rails g sorcery:install
+  - db/migrate/sorceryを編集
+  - bin/rails db:migrate
+  - Userモデルにバリデーション追加
+  - user_sessions_controller.rb
+  - users_controller.rb
+  - ja.ymlで日本語化
+  - routes.rb
+  - viewを作る
+  - ここでローカルでやってみたがフラッシュがエラー？ ActionView::MissingTemplate
+  - コメントアウトでやると画面は表示される。
 ```
 - 【就活】面接イメージ
 
