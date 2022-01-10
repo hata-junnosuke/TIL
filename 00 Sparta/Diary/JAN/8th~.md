@@ -118,12 +118,40 @@ sorceryを導入してログイン機能を実装する
 <br/>
 
 ---
-# の積み上げ
-- 
-# 明日のTODO
-- 
-# コメント
+# 1/10の積み上げ
+- 【インスタ】
+```
+## 1/10
+- %表記の追加（コロンの削除を忘れずに）
+- rubocop追加
+- rubocop修正実行（1 offense todoにも残り）
+- better_errors
+- binding_of_caller
+- gem 'pry-byebug'
+- gem 'pry-rails'
+  - https://pikawaka.com/rails/pry
+- gem 'sorcery'
+- gem 'slim-rails'
+- BMD導入
+  - assets/javascript/application.jsを編集
+  - stylesheet/application.scssに変更して@import記述
+  - package.json記述
+  - yarnインストール
+- generateコマンド時に生成されるファイルを制限する
+- gem 'redis-rails'
+  - config/envi/deveに記述したがなんのためか不明
+- タイムゾーンの設定
+  - config/appに記述
+- i18nの基本設定
+  - config/appに記述
+- jqueryとpopperの追加（ブートストラップのため）
+```
+- 【就活】面接イメージ
 
+# 明日のTODO
+- 【就活】面接イメージ
+# コメント
+明日から仕事。
 <br/>
 
 ---
