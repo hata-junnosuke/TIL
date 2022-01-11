@@ -170,6 +170,27 @@ sorceryを導入してログイン機能を実装する
 
 ---
 ---
+# 1/11の積み上げ
+- 【インスタ】
+```
+## 1/11
+- 昨日のエラーは解消（なんだったのか、コメントを消したら解決）
+- annotaite
+  - gem追加
+  - bundle exec rails g annotate:install
+  - bundle exec annotate
+- rubocop
+  - bundle exec rubocop -a
+```
+- 【就活】面接のイメージ
+# 明日のTODO
+- 【就活】面接
+# コメント
+スローペース
+<br/>
+
+---
+---
 # の積み上げ
 - 
 # 明日のTODO
