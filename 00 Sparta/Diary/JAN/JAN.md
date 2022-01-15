@@ -261,6 +261,131 @@ sorceryを導入してログイン機能を実装する
 
 ---
 ---
+# 1/15の積み上げ
+- 【インスタ】
+```
+# 01 ログイン機能の実装
+ログイン機能を実装しました。レビューをお願いします。
+## 感想及び疑問
+- 最初が大変ということを聞いていたが、その通りでした。環境構築に苦戦してかなり時間がかかってしまった。しかし、エラーに対する処置を学べて「このエラーならこう対処する」といったセオリーを作れた。メモも残してあるので今後も使えるかと思われる。
+- git flowは実用的なのかどうか。チーム開発をしたらわかるのかとは思うが、今の段階では疑問。
+## 実装過程メモ
+- %表記の追加（コロンの削除を忘れずに）
+- rubocop追加
+- rubocop修正実行
+- better_errors
+- binding_of_caller
+- gem 'pry-byebug'
+- gem 'pry-rails'
+ - https://pikawaka.com/rails/pry
+- gem 'sorcery'
+- gem 'slim-rails'
+- BMD導入
+ - assets/javascript/application.jsを編集
+ - stylesheet/application.scssに変更して@import記述
+ - package.json記述
+ - yarnインストール
+- generateコマンド時に生成されるファイルを制限する
+- gem 'redis-rails'
+ - config/envi/devに記述したがなんのためか不明
+- タイムゾーンの設定
+ - config/appに記述
+- i18nの基本設定
+ - config/appに記述
+- jqueryとpopperの追加（ブートストラップのため）
+- ログイン機能
+ - app.scssにcss記述
+ - controller/appにフラッシュタイプを記述
+ - rails g sorcery:install
+ - db/migrate/sorceryを編集
+ - bin/rails db:migrate
+ - Userモデルにバリデーション追加
+ - user_sessions_controller.rb
+ - users_controller.rb
+ - ja.ymlで日本語化
+ - routes.rb
+ - viewを作る
+ - ここでローカルでやってみたがフラッシュがエラー？ ActionView::MissingTemplate
+ - コメントアウトでやると画面は表示される。
+- エラーは解消（コメントを消したら解決したのでコメントが悪かった？）
+- annotaite
+ - gem追加
+ - bundle exec rails g annotate:install
+ - bundle exec annotate
+- rubocop
+ - bundle exec rubocop -a
+- rubocopの修正
+- validates :password, length: { minimum: 3 }, if: -> { new_record? || changes[:crypted_password] }の意味
+ - new_record?メソッドは、インスタンスが新規に作成されるものかどうかを判定するActive Recordのメソッド
+ - if: ->以下は条件付きバリデーションの、シンボルやLambdasてやProcの部分
+- config/envi/dev
+config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_after: 1.day }
+ - rails のセッション管理を redis サーバーで行っている。
+ - expires_afterで有効期限を定めている
+ - https://ccbaxy.xyz/blog/2020/06/21/ruby47/
+## 復習ポイント
+- git flowとは
+   -   Vincent Driessen氏がブログに書いた"A successful Git branching model" というブランチモデルの導入を簡単にする git プラグイン。
+   -   https://qiita.com/KosukeSone/items/514dd24828b485c69a05
+   -   https://www.atlassian.com/ja/git/tutorials/comparing-workflows/gitflow-workflow
+- turbolinkとは
+ - Turbolinksとは、Rails4から正式導入された画面遷移を高速化させるライブラリ
+   Turbolinks自体はJavaScriptのライブラリとして提供されているが、Railsでは利用しやすいようにGemとしてデフォルトで組み込まれている。
+  - 表現は雑だが他の機能を阻害するなど曲者らしい。
+  - https://github.com/turbolinks/turbolinks
+  - 詳しくは　https://techtechmedia.com/turbolinks-rails/
+- slimとは
+ - Slim は 不可解にならない程度に view の構文を本質的な部品まで減らすことを目指したテンプレート言語。
+   https://github.com/slim-template/slim/blob/master/README.jp.md
+- sorceryとは
+ - sorceryとは、Railsに認証機能の実装を行うためのライブラリ。
+ 同じように認証機能を提供してくれているものとしてdeviseなどが挙げられるが、sorceryの方がよりシンプルで、カスタマイズ性に富んでいるという特徴を持つ。
+   - https://github.com/Sorcery/sorcery
+   - https://boku-boc.hatenablog.com/entry/2020/10/10/213625
+   - https://qiita.com/d0ne1s/items/f6f8f4cc7ae6eea069fb
+- rubocopとは
+ - Rubyの静的コード解析を実行するgem。HTML、CSS、またはそれらの中の埋め込みrubyは解析してくれない。
+   またRuboCopの警告全てが正しい訳ではなく、どちらかと言うとこうした方が良いよ的なものが多いので、厳しすぎるんじゃないかと思ったらデフォルトを変えたり、警告する/しないの設定をすることが良い。
+   https://qiita.com/tomohiii/items/1a17018b5a48b8284a8b
+- redisとは
+ - Redisとは、Key-Valueでデータを保存する非リレーショナルデータベースで、単純なKey-Valueだけでなく複雑な種類のデータも扱えます。
+   また、コンピューターのメインメモリ上でデータを管理しているので、非常に高速にデータへアクセスできるのが特徴です。
+   現場Rails7章ではsidekiqを使用するときに使用している。
+ - デメリットとしてデータが揮発性、メモリの消費が大きいことがある。
+ - https://www.fenet.jp/infla/column/%E6%9C%AA%E5%88%86%E9%A1%9E/redis%E3%81%A8%E3%81%AF%E3%81%A9%E3%81%AE%E3%82%88%E3%81%86%E3%81%AA%E3%83%87%E3%83%BC%E3%82%BF%E3%83%99%E3%83%BC%E3%82%B9%EF%BC%9F3%E3%81%A4%E3%81%AE%E7%89%B9%E5%BE%B4%E3%82%84%E4%BD%BF%E3%81%84/
+- annotateとは
+ - 各モデルのスキーマ情報をファイルの先頭もしくは末尾にコメントとして書き出してくれるGem。
+   どんなカラムがあったっけ？ってなった時にいちいちdb/schema.rbを見に行く手間を省ける。
+   さらに、config/routes.rbにルーティング情報を書き出してくれる機能もある。
+  - https://qiita.com/koki_develop/items/ae6b5f41c18b2872d527
+- i18nとは
+ - アプリケーションの文言を英語以外の 別の1つの言語に翻訳 する機能や 多言語サポート 機能を簡単かつ拡張可能な方式で導入するためのフレームワークを提供するgem。
+  https://railsguides.jp/i18n.html
+- database.ymlとは
+ - Railsでデータベースに接続するための情報を記載したファイル。
+   rails new <アプリ名>でrailsのプロジェクトを新規作成した時に、configディレクトリ配下に自動生成される。
+   デフォルトのDBはsqliteが指定されている。
+- migrationファイルとは
+ - マイグレーションファイルとは、データベースの設計図。このファイルを実行することにより記述した内容がデータベースに反映される。
+   https://pikawaka.com/rails/migration
+- schema.rbとは
+ - DBのスキーマをそのままキャプチャしたもの。最新のDBの状態が反映されている。
+   https://qiita.com/shizen-shin/items/84189c16c4d0b2ce8cb4
+- config/application.rbとは
+ - Railsの環境は、開発環境（development）、テスト環境(test)、本番環境(production)の３つがある。これらのすべての環境に共通の設定を記述したファイル。
+   https://qiita.com/shizen-shin/items/7466d71613500ef01983
+- yarnとは
+ - Node.jsのパッケージマネージャー
+   https://qiita.com/akitxxx/items/c97ff951ca31298f3f24
+```
+# 明日のTODO
+- 【インスタ】02行けるか？
+- 【就活】応募
+# コメント
+まとめてやれていないが少しづつ。
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
@@ -268,5 +393,3 @@ sorceryを導入してログイン機能を実装する
 # コメント
 
 <br/>
-
----
