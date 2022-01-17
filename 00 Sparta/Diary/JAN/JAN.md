@@ -422,6 +422,32 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 <br/>
 
 ---
+# 1/17の積み上げ
+- 【インスタ】
+```
+### 1/17
+- Postsモデル作成（テストができてる。。）
+- faker,carrierwaveの導入
+- swiperの導入
+  - `yarn add swiper`
+  - `yarn install`
+  - https://qiita.com/ken_ta_/items/bdf04d8ecab6a855e50f
+  - みけたさんの記事 https://qiita.com/miketa_webprgr/items/0a3845aeb5da2ed75f82
+- routes.rbの編集(この時点ではviewを作っていないのでエラー発生)
+- エラー発生
+  - Sprockets::FileNotFound
+  - 解決はassets/javascripts/swiper.jsを作成して中身を写経したら治った。
+  - これは何かのコマンドで作成される？手動が正解？
+- アップロードファイルをgit管理対象外にした
+```
+- 【就活】応募からの返信待ち
+# 明日のTODO
+- 【インスタ】02終わらせたい。提出したい。
+# コメント
+着実に着実に。
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
