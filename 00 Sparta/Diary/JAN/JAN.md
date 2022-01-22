@@ -508,6 +508,34 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 <br/>
 
 ---
+# 1/22の積み上げ
+- 【インスタ】
+```
+- `require_login`ってどこかで書いたっけ？
+  - sorcery.controllerに入っている。
+  - 同様にlogin,current_userなどもここに記述があった。
+- 複数の画像を保存する
+  - https://qiita.com/tanutanu/items/47f8a229ef52cae3c251
+  - モデルにserialize :images, JSON
+  - コントローラーにimages: []
+  - ビューにmultiple: true
+- kaminari
+  - https://github.com/kaminari/kaminari
+  - ポストコントローラー
+  - `bundle exec rails g kaminari:views bootstrap4 -e slim`
+  - `rails g kaminari:config`
+  - config/ini/kaminari~作成（10件になっているのを15に）
+```
+- git flowについて
+  - https://tracpath.com/bootcamp/learning_git_git_flow.html
+- 【チェリー】12章デバックの読了
+# 明日のTODO
+- 【インスタ】回答作成
+# コメント
+速度まし。
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
@@ -515,3 +543,4 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 # コメント
 
 <br/>
+
