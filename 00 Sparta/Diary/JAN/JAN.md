@@ -536,6 +536,59 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 <br/>
 
 ---
+# 1/23の積み上げ
+- 【インスタ】
+```
+### 1/23
+- shallowルーティングとは
+  - https://qiita.com/tanutanu/items/a245f7691c77b56d4cd3
+  - ネストしたルーティングにおいて、下層にあるテーブルのIDが一意なら、その上にあるテーブルのIDは不要という発想に基づいて、 edit、show、update、destroyの４アクションで、URIパターンがスッキリし、ヘルパーメソッドも短くなったルーティング手段。
+
+- ` bundle exec rails g model comment user:references post:references body:text`
+- `bundle exec rails db:migrate`
+- ` bundle exec rails g controller comments `
+- post/showにcommentのインスタンス記述
+- userとpostモデルに関連づけ
+- viewの作成
+- shallowルーティング
+
+## TODO
+- `.merge(post_id: params[:post_id])`
+  - https://qiita.com/zenfumi/items/694edc863527f91c8976
+  - commentモデルに関して送られるパラメータ以外にpost_idを含めたので今回使用している。
+- `.build(comment_params)`
+  - https://qiita.com/ryosuke-endo/items/6bae532b4f678fdcf87d
+  - ここは二つのモデルを結合する時にはbuildを使うのが慣習らしい。（QAアプリでもやったぞ）
+- partialあたりを理解する
+  - https://pikawaka.com/rails/partial_template
+  - partialオプション、localオプションもあるということを学習。
+- modalも確認
+  - https://www.sejuku.net/blog/78105
+  - すごく雑に書くと
+    - modal-header」で画面名やタイトルを書くヘッダー部分
+    -「modal-body」で詳細な内容を書くボディ部分
+    -「modal-footer」でボタンなど置くフッター部分
+- bigint
+  - integerで作成してしまうとforeign keyが作成できない。そのため、テーブルのカラムをbigintで作成する必要がある。
+  - なお、rails5よりidに対してデフォルトらしい。
+- javascriptが機能していない。renderがうまくいかない。
+  - ファイル名の最後にインデントがあって反応しなかった。
+- bootstrapのcss
+  - https://webnetamemo.com/coding/bootstrap4/201906138320
+```
+
+- 【今日の疑問】
+- `bin/rails~`と`bundle exec rails ~`の違い
+- `git add .`の.の意味
+# 明日のTODO
+- `bin/rails~`と`bundle exec rails ~`の違い
+- `git add .`の.の意味
+- 【インスタ】5の準備とこれまでをいったん復習
+# コメント
+明日は時間をあまり取れなさそうだが、やることに意味がある。
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
