@@ -589,6 +589,36 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 <br/>
 
 ---
+# 1/24の積み上げ
+- 【git】
+  - プルリクを間違えてマージしてしまった時の対処
+    - https://saikeblog.com/2020/03/09/github%E3%81%A7pull-request%E3%81%AE%E3%83%9E%E3%83%BC%E3%82%B8%E3%82%92%E6%89%93%E3%81%A1%E6%B6%88%E3%81%99%E6%96%B9%E6%B3%95/#:~:text=Github%E3%81%A7Pull%20Request%E3%81%AE%E3%83%9E%E3%83%BC%E3%82%B8%E3%82%92%E6%89%93%E3%81%A1%E6%B6%88%E3%81%99%E3%81%AB%E3%81%AF,%E6%89%93%E3%81%A1%E6%B6%88%E3%81%99%E3%81%93%E3%81%A8%E3%81%8C%E3%81%A7%E3%81%8D%E3%81%BE%E3%81%99%E3%80%82
+  - プルリクのベースブランチを変更するときのやり方
+    - https://docs.github.com/ja/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-base-branch-of-a-pull-request
+- 【インスタ】いいねまで写経終了
+```
+### 1/24
+- まずはいいね機能の実装方法を確認
+  - https://techtechmedia.com/favorite-function-rails/
+- `has_many :like_users, through: :likes, source: :user`これはどゆこと
+  - https://qiita.com/tanutanu/items/2a27f1e503c4cbf30928
+  - 別名のカラムを作成して中間テーブルの役割をしている
+- `bundle exec rails g model like user:references post:references`
+- t.index [:user_id, :post_id], unique: trueでダブり防止
+- `bundle exec rails db:migrate`
+- likeモデルでもバリデーション
+- userとpostに関連づけとメソッド追加
+-  bundle exec rails g controller likes
+- view作成
+- routes
+```
+# 明日のTODO
+- 【インスタ】考察して提出
+# コメント
+コードで気になったらどうしてかを調べよう。わからなければ聞こう。
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
@@ -596,4 +626,3 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 # コメント
 
 <br/>
-
