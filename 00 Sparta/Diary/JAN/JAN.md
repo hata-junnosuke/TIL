@@ -619,6 +619,30 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 <br/>
 
 ---
+# 1/25の積み上げ
+- 【インスタ】フォロー機能の写経完了
+```
+### 1/25
+- user一覧と詳細
+  - `render @user`ってドユコト
+- post一覧編集
+- relationshipモデル作成
+  - 関連づけ
+    - # :userじゃないの？
+      belongs_to :follower, class_name: 'User'
+      belongs_to :followed, class_name: 'User'
+- userモデルと関連づけ
+- relationshipコントローラ作成
+- relationshipビュー作成
+- routes
+```
+# 明日のTODO
+- 【インスタ】フォローの検索、次の課題も提出
+# コメント
+緊急事態で時間が取れそう。インスタは来週の週末には終わらせる。
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
