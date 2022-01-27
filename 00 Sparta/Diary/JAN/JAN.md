@@ -693,6 +693,159 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 <br/>
 
 ---
+# 1/27の積み上げ
+- 【復習】
+  -  リレーションの復習
+    - フォローする側（following）とされる側（follower）を別のモデルと捉えるといいのかな。わかったようなわからないような
+    [![Image from Gyazo](https://i.gyazo.com/e9fbb679270fb137aee711cc08c30d89.png)](https://gyazo.com/e9fbb679270fb137aee711cc08c30d89) 
+    - https://qiita.com/kazukimatsumoto/items/14bdff681ec5ddac26d1#%E3%83%95%E3%82%A9%E3%83%AD%E3%83%BC%E3%83%95%E3%82%A9%E3%83%AD%E3%83%AF%E3%83%BC%E6%A9%9F%E8%83%BD%E3%82%92er%E5%9B%B3%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E8%A8%AD%E8%A8%88%E3%81%97%E3%82%88%E3%81%86
+- 【インスタ】
+ ```
+  ## 開発メモ
+  ## 1. まずはUserモデルにアバター用のカラムを追加する
+      - ` bundle exec rails g migration AddAvatarToUsers`
+      - マイグレーションファイルを変更
+      ```
+      #  db/migrate/20220127042444_add_avatar_to_users.rb
+        class AddAvatarToUsers < ActiveRecord::Migration[5.2]
+          def change
+            add_column :users, :avatar, :string
+          end 
+        end
+      ```
+      - `bundle exec rails db:migrate`
+
+  ## 2. 編集画面は/mypage/account/editというパスとする
+  - routes.rb
+
+      namespace :mypage do
+          resource :account, only: %i[edit update]
+      end
+  >ルーティングについてはこちらを参考にする
+  >https://tech-essentials.work/movies/1
+
+  ### なぜnamespace :mypageを使うのか
+  - users_controllerでeditを設定すればいいのではないかと思った。
+  - https://github.com/miketa-webprgr/TIL/blob/master/11_Rails_Intensive_Training/09_issue_note.md
+  >mypageディレクトリ以下にコントローラファイルやビューファイルが保存されるようになる。
+  >管理者画面を実装する場合、「管理者であれば〜を表示したい」ということや、
+  >「管理者であれば〜という機能を実装したい」などということが多いかと思う。
+  >そのような場合、ディレクトリを分けることなく、if文などを使って対応することもできるが、
+  namespaceを使って、ディレクトリを分ける方がスマートである。
+
+  とのこと。
+  ## 3. 画像のセッティング（carrierwave）
+  公式　https://github.com/carrierwaveuploader/carrierwave#getting-started
+  1. `rails generate uploader Avatar`
+  2. app/uploaders/avatar_uploader.rbが作成される
+  3. avatar_uploader.rbの設定を行う（基本的には、コメントアウトを戻す・修正する形で行える）
+  4. Carrierwaveが使えるように、User.rbファイルに追記を行う
+
+        #user.rb
+        # 画像セットのため追記
+        mount_uploader :avatar, AvatarUploader 
+  ## 4. プロフィール編集画面の実装
+  ### コントローラー
+  - 編集画面しか実装しないので、editアクションとupdateアクションの設定
+  - `.permit(:email, :username, :avatar, :avatar_cache)`について、編集画面では`:username`と`:avatar`のみでいいが、今後を見据えて他のものも入っていると思われる。
+
+    ```
+    #mypage/accounts_controller.rb
+    class Mypage::AccountsController < Mypage::BaseController
+      def edit
+        @user = User.find(current_user.id)
+      end
+
+      def update
+        @user = User.find(current_user.id)
+        if @user.update(account_params)
+          redirect_to edit_mypage_account_path, success: 'プロフィールを更新しました'
+        else
+          flash.now['danger'] = 'プロフィールの更新に失敗しました'
+          render :edit
+        end
+      end
+
+      private
+
+      def account_params
+        params.require(:user).permit(:email, :username, :avatar, :avatar_cache)
+      end
+    end
+    ```
+  ### mypage/base_controller.rbの設定
+  - いわば、mypage版のapplication_controller.rbと思ってもいい。（と思う。）
+    ```
+    class Mypage::BaseController < ApplicationController
+      before_action :require_login
+      layout 'mypage'
+    end
+    ```
+  ### ビューの実装
+  - application.html.slimのような立ち位置でlayout/mypage.html.slimを作成
+      ```
+      /layouts/mypage.html.slim
+
+      doctype html
+      html
+        head
+          meta content=("text/html; charset=UTF-8") http-equiv="Content-Type" /
+          meta[name="viewport" content="width=device-width, initial-scale=1.0"]
+          title マイページ | InstaCloneApp
+          = csrf_meta_tags
+          = csp_meta_tag
+          = stylesheet_link_tag 'mypage', media: 'all'
+          = javascript_include_tag 'mypage'
+        body
+          = render 'shared/header'
+          = render 'shared/flash_messages'
+          main
+            .container
+              .row
+                .col-md-8.offset-md-2
+                  .card
+                    .card-body
+                      .row
+                        .col-md-3
+                          = render 'mypage/shared/sidebar'　　#この後作成
+                        .col-md-9
+                          .mypage_content
+                            = yield　　　　#これでedit.html.slimを入れて表示させる
+      ```
+  - mypage/shared/sidebarを作成
+  - edit.html.slimを作成
+
+  ### プレビューの実装
+  - assets/javascripts/mypage.jsにおいてJavascriptでFileAPIっていうのを使っているらしい。
+  > [JavaScript FileAPIについて学ぶ \- Qiita](https://qiita.com/kodokunadancer/items/8028d87d8d2bc6c00e69)
+  - ちょっとここは後回しにして理解しようと思います。
+
+  ## 5. 細かい修正
+  - locales/ja.ymlに追加(avatar: 'アバター)
+  - 自分のページであれば編集ページへのリンクを表示
+  - デフォルト画像のところを編集
+  - ユーザー一覧の上を編集画面のリンクへ
+  - &.で未ログイン時に編集画面に行ったときのエラー発生を防ぐ
+      - `if current_user&.id == @user.id`
+  -  rubocop
+
+  ## コメント
+  - /mypage/account/editを使うメリットはスマートということ以外にeditのviewにいくURLにidが含まれないこと（セキュリティー面）なのかなと思いました。
+  - mypage/account_controllerは一気に作れないのでしょうか。（rails g controllerのように）
+  - FileAPIについては理解に時間がかかりそうなので後回しで先に進もうと思います。
+  - みけたさんのノートを参考に理解させていただきました。ありがとうございました。
+  >参考
+  >https://github.com/miketa-webprgr/TIL/blob/master/11_Rails_Intensive_Training/09_issue_note.md
+```
+# 明日のTODO
+- 【インスタ】
+  - 一回復習
+  - 通知やろう
+# コメント
+ちょっと飛ばしすぎたかも
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
