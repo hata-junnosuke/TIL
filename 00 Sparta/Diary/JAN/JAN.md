@@ -846,6 +846,39 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 <br/>
 
 ---
+# 1/28の積み上げ
+- 【ルーティング】
+  - https://github.com/hata-junnosuke/TIL/blob/main/00%20Sparta/column/%E3%83%AB%E3%83%BC%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0.md
+- 【Formオブジェクト】
+  - https://github.com/hata-junnosuke/TIL/blob/main/00%20Sparta/column/Form%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88.md 
+- 【インスタ】通知
+  - キーワードを調べる
+   ```
+    # 開発メモ
+      ### 0. 予習ポイント
+      解答例のコードから初めて見るものを事前学習をする。
+      - 通知機能はどう実装する？
+      >https://qiita.com/ytoo14/items/2db1dd4fcd7945b980f7 (実装形式は違うが参考までに)
+      - ポリモーフィック関連とは？
+        - ポリモーフィック関連付けを使うと、ある1つのモデルが他の複数のモデルに属していることを、1つの関連付けだけで表現できます。
+      >https://railsguides.jp/association_basics.html#%E3%83%9D%E3%83%AA%E3%83%A2%E3%83%BC%E3%83%95%E3%82%A3%E3%83%83%E3%82%AF%E9%96%A2%E9%80%A3%E4%BB%98%E3%81%91
+      - `enum action_type: { commented_to_own_post: 0, liked_to_own_post: 1, followed_me: 2 }`
+        - これはaction_typeを定義している。（○○なら1みたいに）
+      - `after_create_commit :create_activities`
+        - after_create_commitはcreateをすると指定したアクションが発動することを表す
+        > https://railsguides.jp/active_record_callbacks.html#:~:text=%E5%AE%A3%E8%A8%80%E3%81%A7%E3%81%8D%E3%81%BE%E3%81%99%E3%80%82-,10%20%E3%83%88%E3%83%A9%E3%83%B3%E3%82%B6%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%AE%E3%82%B3%E3%83%BC%E3%83%AB%E3%83%90%E3%83%83%E3%82%AF,-%E3%83%87%E3%83%BC%E3%82%BF%E3%83%99%E3%83%BC%E3%82%B9%E3%81%AE%E3%83%88%E3%83%A9%E3%83%B3%E3%82%B6%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3
+      - gem 'letter_opener_web'(このgemは最終的にはこの課題では導入されていない)
+        - letter_openerに送信された電子メールを閲覧するためのインターフェースを提供します。(とりあえずメールに関するgemと理解)
+        >https://qiita.com/tanutanu/items/c6193c4c2c352ac152ec
+   ```
+# 明日のTODO
+- 【インスタ】通知の続き
+# コメント
+楽しくなってきた。
+
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
@@ -853,3 +886,10 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 # コメント
 
 <br/>
+
+
+
+- やることリスト
+- ルーティングについてまとめるcollection,menber
+- 再度コードレビューしてわからなければ調べる
+  - インスタクローンはなぜredis
