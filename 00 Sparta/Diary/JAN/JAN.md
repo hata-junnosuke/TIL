@@ -879,6 +879,21 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 <br/>
 
 ---
+# 1/29の積み上げ
+- 【git】初めてのgit stash
+>https://qiita.com/chihiro/items/f373873d5c2dfbd03250
+
+- 【mysql】若干詰まったので
+> https://qiita.com/katsuyuki/items/5ba39293f16f5d6cbb56
+
+- 【インスタ】通知の写経まで
+# 明日のTODO
+- 【インスタ】通知の理解
+# コメント
+ちょっと詰まり気味
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
@@ -886,8 +901,6 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 # コメント
 
 <br/>
-
-
 
 - やることリスト
 - ルーティングについてまとめるcollection,menber
