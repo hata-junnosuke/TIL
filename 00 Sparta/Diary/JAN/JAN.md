@@ -894,6 +894,16 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 <br/>
 
 ---
+# 1/30の積み上げ
+- 【インスタ】通知課題提出
+  - https://github.com/hata-junnosuke/TIL/blob/main/00%20Sparta/column/%E3%82%A4%E3%83%B3%E3%82%B9%E3%82%BF%E9%80%9A%E7%9F%A5.md
+# 明日のTODO
+- 【インスタ】11？
+# コメント
+来週末にはインスタ完成目指して。
+<br/>
+
+---
 # の積み上げ
 - 
 # 明日のTODO
@@ -901,7 +911,6 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 # コメント
 
 <br/>
-
 - やることリスト
 - ルーティングについてまとめるcollection,menber
 - 再度コードレビューしてわからなければ調べる
