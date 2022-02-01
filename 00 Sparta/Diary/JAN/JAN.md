@@ -903,14 +903,6 @@ config.session_store :redis_store, { servers: 'redis://localhost:6379', expire_a
 来週末にはインスタ完成目指して。
 <br/>
 
----
-# の積み上げ
-- 
-# 明日のTODO
-- 
-# コメント
-
-<br/>
 - やることリスト
 - ルーティングについてまとめるcollection,menber
 - 再度コードレビューしてわからなければ調べる
