@@ -11,19 +11,115 @@
 1. データベースと接続し、データベースのレコードとActiveRecordオブジェクトを結びつける役割（これによりモデルクラスに記述がなくても自動で反映する機能はSQLの抽象化、接続情報の隠蔽につながる）
 2. ビジネスロックの実装的な振る舞いに関するところ、すなわちバリデーションやレコード保存時などに実行するさまざまなコールバックなどを実行する役割
 
+## モデルを扱う
+### モデルを通じて検索を行う
+- コンソールでデータを作成する
+```ruby
+$ bin/rails c
+Loading development environment (Rails 7.0.2.2)
+irb(main):001:1* (1.
+irb(main):002:1*   Book.
+irb(main):002:2*   Book.create(
+irb(main):003:2*     name:"Book #{i}",
+irb(main):004:2*     published_on: Time.parse("20191224").ago(i.months),
+irb(main):001:1* (1..5).each do |i|
+irb(main):002:2*   Book.create(
+irb(main):003:2*     name:"Book #{i}",
+irb(main):004:2*     published_on: Time.parse("20191224").ago(i.months),
+irb(main):005:2*     price:(i*1000),
+irb(main):006:1*   )
+irb(main):007:0> end
+   (1.6ms)  SELECT sqlite_version(*)
+  TRANSACTION (0.1ms)  begin transaction                                                                                 
+  Book Create (0.7ms)  INSERT INTO "books" ("name", "published_on", "price", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?)  [["name", "Book 1"], ["published_on", "2019-11-24"], ["price", 1000], ["created_at", "2022-02-23 01:31:16.979898"], ["updated_at", "2022-02-23 01:31:16.979898"]]                                 
+  TRANSACTION (0.4ms)  commit transaction                                                                                
+  TRANSACTION (0.0ms)  begin transaction                                                                                 
+  Book Create (0.2ms)  INSERT INTO "books" ("name", "published_on", "price", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?)  [["name", "Book 2"], ["published_on", "2019-10-24"], ["price", 2000], ["created_at", "2022-02-23 01:31:16.984624"], ["updated_at", "2022-02-23 01:31:16.984624"]]
+  TRANSACTION (0.3ms)  commit transaction
+  TRANSACTION (0.0ms)  begin transaction
+  Book Create (0.2ms)  INSERT INTO "books" ("name", "published_on", "price", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?)  [["name", "Book 3"], ["published_on", "2019-09-24"], ["price", 3000], ["created_at", "2022-02-23 01:31:16.985846"], ["updated_at", "2022-02-23 01:31:16.985846"]]
+  TRANSACTION (0.3ms)  commit transaction
+  TRANSACTION (0.0ms)  begin transaction
+  Book Create (0.2ms)  INSERT INTO "books" ("name", "published_on", "price", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?)  [["name", "Book 4"], ["published_on", "2019-08-24"], ["price", 4000], ["created_at", "2022-02-23 01:31:16.987211"], ["updated_at", "2022-02-23 01:31:16.987211"]]
+  TRANSACTION (0.3ms)  commit transaction
+  TRANSACTION (0.0ms)  begin transaction
+  Book Create (0.2ms)  INSERT INTO "books" ("name", "published_on", "price", "created_at", "updated_at") VALUES (?, ?, ?, ?, ?)  [["name", "Book 5"], ["published_on", "2019-07-24"], ["price", 5000], ["created_at", "2022-02-23 01:31:16.988484"], ["updated_at", "2022-02-23 01:31:16.988484"]]
+  TRANSACTION (0.3ms)  commit transaction
+=> 1..5
+```
+これを題材に検索する。
+- find (idで検索)とfind_by（他で検索）
+```ruby
+irb(main):008:0> Book.find(1)
+  Book Load (0.8ms)  SELECT "books".* FROM "books" WHERE "books"."id" = ? LIMIT ?  [["id", 1], ["LIMIT", 1]]
+=>                                                              
+#<Book:0x00007fd7c3082a30                                       
+ id: 1,                                                         
+ name: "Book 1",                                                
+ published_on: Sun, 24 Nov 2019,                                
+ price: 1000,                                                   
+ created_at: Wed, 23 Feb 2022 01:31:16.979898000 UTC +00:00,    
+ updated_at: Wed, 23 Feb 2022 01:31:16.979898000 UTC +00:00>    
+irb(main):009:0> B
+irb(main):009:0* Book.
+irb(main):009:0> Book.find_by(name: "Book 3")
+  Book Load (0.6ms)  SELECT "books".* FROM "books" WHERE "books"."name" = ? LIMIT ?  [["name", "Book 3"], ["LIMIT", 1]]
+=>                                                              
+#<Book:0x00007fd7c318a838                                       
+ id: 3,                                                         
+ name: "Book 3",                                                
+ published_on: Tue, 24 Sep 2019,                                
+ price: 3000,                                                   
+ created_at: Wed, 23 Feb 2022 01:31:16.985846000 UTC +00:00,    
+ updated_at: Wed, 23 Feb 2022 01:31:16.985846000 UTC +00:00>  
+ ```
+- findは検索対象が見つからないと例外発生するが、find_byではnilを返す
+```ruby
+irb(main):010:0> Book.find(10)
+  Book Load (0.5ms)  SELECT "books".* FROM "books" WHERE "books"."id" = ? LIMIT ?  [["id", 10], ["LIMIT", 1]]
+/Users/hatajunnosuke/.rbenv/versions/3.0.3/lib/ruby/gems/3.0.0/gems/activerecord-7.0.2.2/lib/active_record/core.rb:284:in `find': Couldn't find Book with 'id'=10 (ActiveRecord::RecordNotFound)
+irb(main):011:0> B
+irb(main):011:0* Book.
+irb(main):011:0> Book.find_by(price:10)
+  Book Load (0.5ms)  SELECT "books".* FROM "books" WHERE "books"."price" = ? LIMIT ?  [["price", 10], ["LIMIT", 1]]
+=> nil               
+```
+- 複数件のレコードを検索する（where）
+```ruby
+irb(main):012:0> Book.where("price > ?",3000)
+  Book Load (1.3ms)  SELECT "books".* FROM "books" WHERE (price > 3000)
+=>                                                              
+[#<Book:0x00007fd7b7ee3450                                      
+  id: 4,                                                        
+  name: "Book 4",                                               
+  published_on: Sat, 24 Aug 2019,                               
+  price: 4000,                                                  
+  created_at: Wed, 23 Feb 2022 01:31:16.987211000 UTC +00:00,   
+  updated_at: Wed, 23 Feb 2022 01:31:16.987211000 UTC +00:00>,  
+ #<Book:0x00007fd7b7ee3388                                      
+  id: 5,                                                        
+  name: "Book 5",                                               
+  published_on: Wed, 24 Jul 2019,                               
+  price: 5000,
+  created_at: Wed, 23 Feb 2022 01:31:16.988484000 UTC +00:00,
+  updated_at: Wed, 23 Feb 2022 01:31:16.988484000 UTC +00:00>]
+```
+
+
 ### scopeを定義
 scopeはよく利用する検索条件に名前をつけてひとまとめにしたもの。
-```
+```ruby
 class Book < ApplicationRecord
   scope :costly,->{where("price >?",3000)}
+  # 「Javaについて書かれた」という検索をする場合
   scope :written_about,->(theme){where("name like ?","%#{theme}%")}
 end
 ```
-```
-学習メモ
-ActiveRecord：：Relationの理解が不十分
-```
+- Scopeのメリット
+  - 繰り返し利用するクエリの再利用性が上がる
+  - クエリに名前をつけることで、可読性が向上する
 
+- default_scopeで常にスコープをかけることができるが、利用性が損なわれる可能性があるので使い方に注意。
 ## モデル同士のリレーション
 `$ bin/rails g migration AddPublisherIdToBooks publisher:references`
 - referencesという型は別のモデルへの参照を意味する。
@@ -32,10 +128,10 @@ ActiveRecord：：Relationの理解が不十分
 - ActiveRecordでこれを表現するには`has_many`　`belongs_to`を追加する。これによりPublishモデルにbooksというメソッドが、Bookモデルにはpublisherメソッドが定義される。これでお互いの情報を引き出したり、できる。
 - 「1対1」の関係には「has_one」というクラスメソッドを利用する。
  
-## 多対多のリレーションを実現する
+### 多対多のリレーションを実現する　
 ActiveRecordで多対多を表現するには**中間モデル**を作成することになる。
 1. BookAuthorモデルを作る
-2. 各モデルにhas_manyのオプションthroughで中間テーブルを指定する。
+2. booksとauthorsモデルにhas_manyのオプションthroughで中間テーブルを指定する。
 
 ```
 学習メモ
@@ -44,6 +140,7 @@ ActiveRecordで多対多を表現するには**中間モデル**を作成する�
 
 ## モデルを通じてデータを更新する
 ### バリデーションと「！」付きメソッド
+- 保存せずにバリデーションの確認をしたい場合はvalid?メソッドを使うといい。
 - 「！」ありはバリデーション失敗時に例外「ActiveRecord::RecordInvalid」が起こる
 
 ## コールバック
@@ -54,6 +151,34 @@ ActiveRecordで多対多を表現するには**中間モデル**を作成する�
 
 ## ActiveRecord::Enumで列挙型を扱う
 バリエーションが少ないならば数値で管理したほうが効率的。1なら販売中、2なら売り切れみたいに。Enum型はカラムに対してプログラム上別名を与えることができる。（modelに定義する）
+```ruby
+enum sales_status: {
+    reservation: 0,
+    now_on_sale: 1,
+    end_of_print: 2
+  }
+#コンソールで使うと  
+irb(main):058:1* Book.create(
+irb(main):059:1*   name:"enum Book",
+irb(main):060:1*   sales_status: 1,
+irb(main):061:1*   publisher: Publisher.find(1),
+irb(main):062:1*   price: 100
+irb(main):063:0> )
+  Publisher Load (1.0ms)  SELECT "publishers".* FROM "publishers" WHERE "publishers"."id" = ? LIMIT ?  [["id", 1], ["LIMIT", 1]]
+  TRANSACTION (0.1ms)  begin transaction
+  Book Create (0.8ms)  INSERT INTO "books" ("name", "published_on", "price", "created_at", "updated_at", "publisher_id", "sales_status") VALUES (?, ?, ?, ?, ?, ?, ?)  [["name", "enum Book"], ["published_on", nil], ["price", 100], ["created_at", "2022-02-23 03:36:35.715778"], ["updated_at", "2022-02-23 03:36:35.715778"], ["publisher_id", 1], ["sales_status", 1]]
+  TRANSACTION (0.8ms)  commit transaction
+=> 
+#<Book:0x00007fdda6645d08
+ id: 1,
+ name: "enum Book",
+ published_on: nil,
+ price: 100,
+ created_at: Wed, 23 Feb 2022 03:36:35.715778000 UTC +00:00,
+ updated_at: Wed, 23 Feb 2022 03:36:35.715778000 UTC +00:00,
+ publisher_id: 1,
+ sales_status: "now_on_sale"> #1と入力したのにnow_on_saleと表記されている！！
+```
 
 ## コントローラーの役割
 ### ブラウザからアプリケーションにアクセスしたときの流れ
@@ -94,15 +219,41 @@ end
 - フックの一例  
  [![Image from Gyazo](https://i.gyazo.com/76cc6a3641bac2a0ebc38f88a509c193.png)](https://gyazo.com/76cc6a3641bac2a0ebc38f88a509c193)
  - aroundフックは呼び出すメソッドではbeforeの後yieldを使ってアクション側に処理を戻す必要がある。
- - フックは`skip_before_action`などのようにスキップすることもできる。
+　　- フックのスキップ
+  - フックは`skip_before_action`などのようにスキップすることもできる。
 
 ### ルーティングとリソース
 - CRUD操作は`resouces :publishers`の一行で書き、定義できる。
 - resoucesのブロックの中にresourcesを書くことで拡張することが可能
+- memberを利用すると「/publishers/:id/detail」のように個別のリソースに対してアクションを追加できる。
+- collectionを利用すると「/publishers/search」のように全体のリソースに対してアクションを追加できる。
 - 反対にonlyでルーティングを制限することもできる。
 - ログインユーザーの自身のプロフィールのように1人のユーザーから見てアプリケーション上に1つしか存在しないリソースは`resource`で定義する。（こちらではindexが作成されない,idと紐づかない）
+```ruby
+# route.rb
+  resources :publishers
+  resource :profile, only: %i{show edit update}
+
+# bin/rails routes
+publishers     GET    /publishers(.:format)                                                                          publishers#index
+               POST   /publishers(.:format)                                                                          publishers#create
+new_publisher  GET    /publishers/new(.:format)                                                                      publishers#new
+edit_publisher GET    /publishers/:id/edit(.:format)                                                                 publishers#edit
+publisher      GET    /publishers/:id(.:format)                                                                      publishers#show
+               PATCH  /publishers/:id(.:format)                                                                      publishers#update
+               PUT    /publishers/:id(.:format)                                                                      publishers#update
+               DELETE /publishers/:id(.:format)                                                                      publishers#destroy
+
+edit_profile GET    /profile/edit(.:format)                                                                          profiles#edit
+  profile    GET    /profile(.:format)                                                                               profiles#show
+             PATCH  /profile(.:format)                                                                               profiles#update
+             PUT    /profile(.:format)                                                                               profiles#update
+
+```
 
 ### 例外処理
+- 一般的な例外が発生した場合は500のステータスコードを返す
+- Railsで特別扱いされる例外
 [![Image from Gyazo](https://i.gyazo.com/95c274d7780cbde2e29e0e6c933047c9.png)](https://gyazo.com/95c274d7780cbde2e29e0e6c933047c9)
 - 特定の例外に対して挙動を指定したい場合`rescue_from`を使うことで実装できる。
 
@@ -170,7 +321,7 @@ railsにはXSSに対する対策がフレームワークとして組み込まれ
 - Slim
 
 ### APIサーバにとってのビューについて
-省略
+省略(Reactとか使う場面になったら読めばいいかな)
 
 ## まとめ
 **アプリケーションの主要なロジックはなるべくモデルに書くべき**
