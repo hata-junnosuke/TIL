@@ -1,6 +1,13 @@
 # 3章　押さえておきたいRailsの基本機能
 ## テストの種類と実行方法
 基本的には本で確認せよ
+- テストの実行方法
+  - `$ bin/rails test`
+  - `$ bin/rails test test/models`#<-ディレクトリ指定
+  - `$ bin/rails test test/models/todo_test.rb -n test_the_truth`#<-　-n(--name)でテスト名も指定して実行できる。  
+
+-  fixture
+7章でfactory_botの解説がある
 ### Rails 6.0で追加された並列テスト
 - Rails 6.0からテストを高速で実行するため（デフォルトで）並列実行が行えるようになった。
 - 並列の指定はtest/test_helper.rbでできる。
