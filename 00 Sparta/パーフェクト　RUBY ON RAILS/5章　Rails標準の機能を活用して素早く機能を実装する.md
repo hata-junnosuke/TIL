@@ -1,7 +1,7 @@
 # Active Jobによる非同期実行
-Active Jobは非同期実行処理機能を提供するライブラリ。バックエンド上で実行する非同期処理を統一的に利用できる。
-非同期処理はメール送信やデータを集計してCSVファイルを作るなどの時間がかかる処理で利用される。
-長い時間かかる処理を非同期で別途実行することでユーザへの応答を早くできる。
+- Active Jobは非同期実行処理機能を提供するライブラリ。バックエンド上で実行する非同期処理を統一的に利用できる。
+- 非同期処理はメール送信やデータを集計してCSVファイルを作るなどの時間がかかる処理で利用される。
+- 長い時間かかる処理を非同期で別途実行することでユーザへの応答を早くできる。
 ## ジョブの実装
 読んで実行すればわかる。
 ```ruby
@@ -13,6 +13,7 @@ Enqueued AsyncLogJob (Job ID: 7453ef98-5b0d-47f6-b848-b56a2b4745eb) to Async(def
  @arguments=[],
  〜〜
 Performed AsyncLogJob (Job ID: 7453ef98-5b0d-47f6-b848-b56a2b4745eb) from Async(default) in 41.24ms
+
 #　　jobの確認
 irb(main):002:0> AsyncLog.last
   AsyncLog Load (1.4ms)  SELECT "async_logs".* FROM "async_logs" ORDER BY "async_logs"."id" DESC LIMIT ?  [["LIMIT", 1]]
@@ -53,16 +54,16 @@ ActiveJobには例外をキャッチして対応を変える仕組みがある
 ## Active Storageによるファイルアップデート
 ### Active Storageを利用したサンプルアプリ作成
 本通り。
-`$ bin/rails active_storage:install`でインストールして
-`$ bin/rails g scaffold user name portrait:attachment`のようにすると、has_one_attachedとされる
-なおportraitはカラムに含まれていなくて別テーブルで管理されている。
+- `$ bin/rails active_storage:install`でインストールして
+- `$ bin/rails g scaffold user name portrait:attachment`のようにすると、has_one_attachedとされる
+- なおportraitはカラムに含まれていなくて別テーブルで管理されている。
 
  ### Active Storageの動作と設定
- Action Storageの機能は2つのモデルで作られる。
- 他の画像アップロード用のgemではモデルにカラムを持たせることが多いが、ActionStorageではポリモーフィック関連を選択している。
- - ActionStorage::Attachment・・モデルとBlobの中間テーブル
- - ActionStorage::Blob・・アップロードファイルのメタ情報を管理するモデル
-実際の本番環境ではS3に保存することが多い。config/storage.ymlに定義することで設定できる。
+ - Action Storageの機能は2つのモデルで作られる。
+ - 他の画像アップロード用のgemではモデルにカラムを持たせることが多いが、ActionStorageではポリモーフィック関連を選択している。
+  - ActionStorage::Attachment・・モデルとBlobの中間テーブル
+  - ActionStorage::Blob・・アップロードファイルのメタ情報を管理するモデル
+- 実際の本番環境ではS3に保存することが多い。config/storage.ymlに定義することで設定できる。
 
 ### サムネイルの生成
 読んで
@@ -83,9 +84,36 @@ ActiveJobには例外をキャッチして対応を変える仕組みがある
 
 ### Action Mailboxによるメール受信
 大まかな流れ
-1.　Sendgridにメールが届く
-2.　Sendgridが届いたメールデータを添えてRailsアプリの特定URLへリクエストを投げる
-3.　Action Mailboxがメールデータを保存したり、メールに応じて非同期処理を行う
+- Sendgridにメールが届く
+- Sendgridが届いたメールデータを添えてRailsアプリの特定URLへリクエストを投げる 
+- Action Mailboxがメールデータを保存したり、メールに応じて非同期処理を行う
 
 `Mailboxについてはまたやろう`
+
+## Action Textによるリッチテキスト機能
+- Rails6.0で追加
+- リッチテキストを編集するためのエディタと保存するデータベースを簡単に用意できる
+
+### Action Textとは
+機能
+- WYSIWYGエディタ（リッチテキストを編集するエディタ）
+- リッチテキストコンテンツを保存するモデル
+- リッチテキストを取り扱うヘルパーメソッド群
+
+### Action Textの使い方
+本の通りに用意
+
+### Action Textの中身と利用時の注意点
+- リッチテキストはActionText：：RichTextという別のモデルで管理されている
+- なのでN＋1問題には注意
+- 専用のeagerload
+ - with_rich_text_#{name}
+ - with_rich_text_#{name}_and_embeds
+
+## Action Cableによるリアルタイム通信
+- WebSocketを使ったリアルタイム処理を提供するライブラリ。
+- WebSocketはクライアントとサーバー間のコネクションを維持し双方向でデータをやりとりする通信規格
+
+　### Action Cable
+ `作ってはみたが使うときに再読するくらいでいいかと。`
 
