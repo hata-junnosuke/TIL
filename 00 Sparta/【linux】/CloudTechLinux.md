@@ -35,3 +35,10 @@ EC2においてはデフォルトでping通信ができないので設定が必�
 ### nslookup/host/dig
 nslookupは非推奨、詳細も確認できるのでdigを使うべし。
 ![スクリーン ショット 2023-04-19 に 20 24 57 午後](https://user-images.githubusercontent.com/81806676/233061022-a34114d9-5356-4283-9e34-8c1cbdece94a.png)
+
+
+
+
+
+# Linuxの特徴/ディストリビューションについて
+動画で学習してください。
