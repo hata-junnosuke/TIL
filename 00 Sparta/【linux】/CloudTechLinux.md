@@ -1,3 +1,26 @@
+# シェルの概念や特徴(動画で学習、cron以降はインフラに触るようになってからでいいと思う)
+## パーミッション
+![スクリーン ショット 2023-04-21 に 14 35 17 午後](https://user-images.githubusercontent.com/81806676/233548902-13f4f6a4-f81f-41cb-96dd-d76f753f6809.png)
+![スクリーン ショット 2023-04-21 に 14 36 40 午後](https://user-images.githubusercontent.com/81806676/233549088-628ef23e-2a30-4b5d-80a3-7791104bae77.png)
+
+# 運用・保守
+## SSH接続
+### SSHデーモンとSSHクライアントのどちらも起動していないと接続できない。
+![スクリーン ショット 2023-04-21 に 14 59 02 午後](https://user-images.githubusercontent.com/81806676/233552297-e4625061-3099-4b5a-9641-ba4ec074ad53.png)
+
+## cron
+### cronとは
+![スクリーン ショット 2023-04-21 に 15 08 08 午後](https://user-images.githubusercontent.com/81806676/233553778-d07a2792-178e-4f2d-93ca-95e54a8381cb.png)
+### cronの書き方
+![スクリーン ショット 2023-04-21 に 15 10 11 午後](https://user-images.githubusercontent.com/81806676/233554122-eed9aadd-3ba3-4a1b-ade9-18c63ead891f.png)
+![スクリーン ショット 2023-04-21 に 15 12 49 午後](https://user-images.githubusercontent.com/81806676/233554670-66ab7560-dff1-4861-a707-6cbeeb2675f5.png)
+### cronの設定
+![スクリーン ショット 2023-04-21 に 15 14 07 午後](https://user-images.githubusercontent.com/81806676/233555069-1300a91b-f3a7-4ebe-8894-e92ea4596530.png)
+### AWSでのcronの使用
+![スクリーン ショット 2023-04-21 に 15 16 08 午後](https://user-images.githubusercontent.com/81806676/233555602-cacdb3ea-3687-482d-914b-e6bb946db154.png)
+
+
+
 # コマンド
 ## パフォーマンスコマンド
 ### top
