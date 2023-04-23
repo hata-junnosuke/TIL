@@ -60,7 +60,9 @@ nslookupは非推奨、詳細も確認できるのでdigを使うべし。
 ![スクリーン ショット 2023-04-19 に 20 24 57 午後](https://user-images.githubusercontent.com/81806676/233061022-a34114d9-5356-4283-9e34-8c1cbdece94a.png)
 
 # サーバーサイドコンポーネント
-## 
+## パーティション
+![スクリーン ショット 2023-04-23 に 09 30 06 午前](https://user-images.githubusercontent.com/81806676/233813086-b132a2e9-2f35-473a-bdec-ed0634937989.png)
+![スクリーン ショット 2023-04-23 に 09 30 59 午前](https://user-images.githubusercontent.com/81806676/233813105-eab7ef8b-a691-418c-92a7-bc615b1f31fe.png)
 
 
 
