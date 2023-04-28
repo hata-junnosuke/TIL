@@ -1,3 +1,4 @@
+# ブラッシュアップしていく
 # 1章　Ruby on Rails の概要
 ## Railsの思想
 ### CoC（Convention over Configuration）
