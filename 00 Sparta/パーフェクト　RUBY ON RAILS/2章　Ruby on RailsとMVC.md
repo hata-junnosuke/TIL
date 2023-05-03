@@ -304,15 +304,27 @@ def show
 
 ### Layoutテンプレート
 - 全体のテンプレートを設定するなら/layout/application.html.erbへ
+- 特定のレイアウトを指定する場合は次のようにrenderメソッドオプションで指定できる
+ ```
+ render :show, layout: "awesome_book"
+ ```
 ### variantsによるテンプレートの切り替え
 - variants機能を使えば、PC、モバイルなどの端末に対応したものを作れる。
 
 ## ビューテンプレート
+### ヘルパーメソッドの利用
+- パスとURLヘルパーメソッド
+   - Prefix値に_path→ドメインやポートを除いた/から始まるパスを指定
+   - Prefix値に_url→ドメインを含んだ完全なURLを指定
 ### ヘルパーメソッド
 - url_for
 - link_to
 - form_with
 - このほか独自で定義することもできる
+
+### 独自ヘルパーメソッドの定義
+- アプリケーション全体で使うものであればapp/helpers/application_helper.rbに実装する
+- コントローラごとに使うのであればapp/helpers/books_helper.rbに実装する
 
 ### エスケープ処理
 クロスサイトスクリプティング（XSS）・・プログラムが意図しないような文字列を渡すことであるページに対して自由にJavaScriptを埋め込んで実行させてしまう攻撃方法
