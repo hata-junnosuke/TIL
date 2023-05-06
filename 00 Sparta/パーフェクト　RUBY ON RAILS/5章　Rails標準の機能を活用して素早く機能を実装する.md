@@ -97,6 +97,7 @@ derect_upload: trueを追加することでフォームのサブミットボタ�
 - `$ bin/rails g mailer ~~`でファイルを作成して
 - 〜.rbでアクション名と内容を記述して
 - コントローラーで`UserMailer.with(to:"hoge@example.com", name: "fuga").welcome.deliver_now`のようにして呼び出す。
+- 送信元はapplication_mailer.rbに記載されているので自分のアプリケーション用に編集すれば良い。
 
 ### Action Mailboxによるメール受信
 大まかな流れ
