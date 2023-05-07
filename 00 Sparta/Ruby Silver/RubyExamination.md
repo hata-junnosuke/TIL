@@ -1,5 +1,5 @@
 #  RubyExamination
-## 問題
+## 問題（stepメソッド）
 ```
 def hoge
   x = 0
