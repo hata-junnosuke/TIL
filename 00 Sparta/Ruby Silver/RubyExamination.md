@@ -554,13 +554,13 @@ StandardErrorを継承しないクラスのインスタンスをraiseメソッ�
 exception class/object expected
 ```
 この問題ではraiseメソッドに配列を指定しているので、TypeErrorが発生し同様のメッセージが表示されます。
-## 問題
+## 問題()
 ```
 
 ```
 ### 解説
 
-## 問題
+## 問題()
 ```
 
 ```
