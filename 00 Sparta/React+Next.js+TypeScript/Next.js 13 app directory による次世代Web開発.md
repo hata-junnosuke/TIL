@@ -96,6 +96,9 @@ export default function NavBar() {
 3. layout.tsxでnav-barをimportする。
 
 # Data fetch in server component
+- サーバーコンポーネントであればSWRなど経由しなくても直接fetchすることができる！
+- 一方、クライアントコンポーネントの場合はuseEffectやSWRを使う必要がある！
+
 fetchの方法
 - SSG→force-cacheで静的（デフォルト）
 - SSR→no-storeで動的
