@@ -1078,72 +1078,365 @@ RefinementはModule#refineを呼び出すことで定義することが出来ま
 Module#usingで定義したRefinementを有効化することができます。
 
 この問題では有効化した後ですので、メソッドを読んでもエラーにならずに100が表示されます。
-## 問題()
+## 問題(block)
+```
+def m1(*)
+  str = yield if block_given?
+  p "m1 #{str}"
+end
+
+def m2(*)
+  str = yield if block_given?
+  p "m2 #{str}"
+end
+
+m1 m2 do
+  "hello"
+end
+```
+### 解説
+問題のコードで使用されているメソッド類は以下の通りです。
+
+Kernel#block_given?はブロックが渡された場合は、真になります。
+yieldはブロックの内容を評価します。
+{ }はdo endよりも結合度が高い為、実行結果に差が出ます。
+問題のコードは以下のように解釈されます。
+
+m1の引数と解釈されるため、m2の戻り値はm2が表示されます。
+m1へdo .. endのブロックが渡されます。よって、m1 helloが表示されます。
+## 問題(ブロック引数)
+```
+def bar(&block, n)
+  block.call
+end
+
+bar(5) {
+  puts "hello, world"
+}
+```
+### 解説
+引数名に&を付与することでブロック引数になります。
+ブロック引数は他の引数より後に記述します。
+上のコードはエラーになる
+
+
+## 問題(module_evalに文字列)
+```
+module A
+  B = 42
+
+  def f
+    21
+  end
+end
+
+A.module_eval(<<-CODE)
+  def self.f
+    p B
+  end
+CODE
+
+B = 15
+
+A.f
+
+```
+### 解説
+module_evalに文字列を引数とした場合は、レシーバーのスコープで評価されます。
+問題のプログラムを次のようにするとネストの状態を調べることができます。
+```
+A.module_eval(<<-CODE)
+  p Module.nesting # [A]と表示され、モジュールAのスコープにあることがわかる
+CODE
+```
+定数は静的に探索が行われますので、A::Bの42が答えになります。
+## 問題(モジュールにクラスメソッドを定義)
 ```
 
 ```
 ### 解説
+モジュールにクラスメソッドを定義するには３つ方法があります。
+この問題の答えは次のとおりです。
 
-## 問題()
 ```
+module M
+  extend self
+  def a
+    100
+  end
+end
+
+p M.a
+
+```
+
+```
+module M
+  def a
+    100
+  end
+
+  module_function :a
+end
+
+p M.a
+
+```
+
+```
+module M
+  class << self
+    def a
+      100
+    end
+  end
+end
+
+p M.a
+
+```
+## 問題(インスタンスメソッドの追加方法)
+```
+module M
+  def method_a
+    __method__
+  end
+end
+
+class C
+  include M
+end
+
+p C.new.method_a
+
+# ここに当てはまるプログラムを選んでください。
+
+p C.new.method_b
 
 ```
 ### 解説
+インスタンスメソッドの追加の方法についての問題です。
 
-## 問題()
+問題ではmethod_bを追加する選択肢を選ぶ必要があります。
+クラスC、モジュールMのスコープでメソッド名にselfがあるとクラスメソッドになります。
+
+選択肢のひとつとしてまず、クラスCを再オープンしてメソッドを追加する方法が選べます。
 ```
-
+class C
+  def method_b
+    __method__
+  end
+end
 ```
-### 解説
+また、クラスCにモジュールMをインクルードしているので、　モジュールMにあるメソッドテーブルを探索できます。
 
-## 問題()
+そのため、モジュールMにメソッドを追加することで期待する結果を得ることができます。
+
+次の選択肢も答えになります。
 ```
-
+module M
+  def method_b
+    __method__
+  end
+end
 ```
-### 解説
-
-## 問題()
+## 問題(定数とネスト)
 ```
+module K
+  CONST = "Good, night"
+  class P
+  end
+end
 
-```
-### 解説
+module K::P::M
+  class C
+    CONST = "Good, evening"
+  end
+end
 
-## 問題()
-```
+module M
+  class C
+    CONST = "Hello, world"
+  end
+end
 
-```
-### 解説
-
-## 問題()
-```
-
-```
-### 解説
-
-## 問題()
-```
-
-```
-### 解説
-
-## 問題()
-```
-
-```
-### 解説
-
-## 問題()
-```
-
-```
-### 解説
-
-## 問題()
-```
-
+class K::P
+  class M::C
+    p CONST
+  end
+end
 ```
 ### 解説
+クラスK::PにあるクラスM::Cはトップレベルにあるものとは異なります。
+ネスト状態が同じものがあれば、そのレキシカルスコープから定数の探索を行います。
+この問題では定数CONSTが参照しているのはK::P::M::Cで、そのレキシカルスコープにある定数を探索しますので"Good, evening"と表示されます。
+```
+module K
+  class P
+    p Module.nesting # [K::P, K]と表示されます
+  end
+end
 
+module K::P::M
+  class C
+    p Module.nesting # [K::P::M::C, K::P::M]と表示されます
+  end
+end
+
+module M
+  class C
+    p Module.nesting # [M::C, M]と表示されます
+  end
+end
+
+class K::P
+  class M::C
+    p Module.nesting # [K::P::M::C, K::P]と表示されます
+  end
+end
+```
+## 問題(Rational)
+```
+val = 1 + 1/2r
+puts val.class
+```
+### 解説
+1/2rはRationalのインスタンスが作成されます。
+
+FixnumとRationalの演算はRationalになります。
+
+(Ruby 2.4からFixnumとBignumが統合されIntegerになりました)
+
+その他のクラス演算を以下にまとめます。
+
+演算	戻り値クラス
+
+FixnumとRationalの演算	Rational
+
+FloatとRationalの演算	Float
+
+FixnumとComplexの演算	Complex
+
+FloatとComplexの演算	Complex
+
+Date同士の減算	Rational
+
+Time同士の減算	Float
+
+DateTime同士の減算	Rational
+
+
+## 問題(定数の参照)
+```
+module M1
+  class C1
+    CONST = "001"
+  end
+
+  class C2 < C1
+    CONST = "010"
+
+    module M2
+      CONST = "011"
+
+      class Ca
+        CONST = "100"
+      end
+
+      class Cb < Ca
+        p CONST
+      end
+    end
+  end
+end
+```
+### 解説
+使われている定数の場所がネストされている場合は内側から順に定数の探索が始まります。
+レキシカルスコープに定数がない場合は、スーパークラスの探索を行います。
+
+クラスCbから最も物理的に近いのはM2::CONSTであるため答えは"011"になります。
+スーパークラスの探索はこの場合には行われません。
+## 問題(キーワード引数)
+```
+def foo(arg:)
+  puts arg
+end
+
+foo 100
+```
+### 解説
+問題のコードはArgumentError: missing keyword: argが発生します。
+
+argはキーワード引数と言います。キーワード引数は省略することができません。
+
+問題のコードは次のように修正します。
+```
+def foo(arg:)
+  puts arg
+end
+
+foo arg: 100
+```
+
+## 問題(using)
+```
+class C
+end
+
+module M
+  refine C do
+    def m1
+      100
+    end
+  end
+end
+
+class C
+  def m1
+    400
+  end
+
+  def self.using_m
+    using M
+  end
+end
+
+C.using_m
+
+puts C.new.m1
+```
+### 解説
+usingはメソッドの中で呼び出すことは出来ません。呼び出した場合はRuntimeErrorが発生します。
+
+
+## 問題(スコープ)
+```
+module M
+  def refer_const
+    CONST
+  end
+end
+
+module E
+  CONST = '010'
+end
+
+class D
+  CONST = "001"
+end
+
+class C < D
+  include E
+  include M
+  CONST = '100'
+end
+
+c = C.new
+p c.refer_const
+```
+### 解説
+refer_constはモジュールMにありますが、CONSTはレキシカルに決定されるためモジュールMのスコープを探索します。
+この問題ではCONSTが見つからないため例外が発生します。
 ## 問題()
 ```
 
