@@ -1104,6 +1104,54 @@ yieldはブロックの内容を評価します。
 
 m1の引数と解釈されるため、m2の戻り値はm2が表示されます。
 m1へdo .. endのブロックが渡されます。よって、m1 helloが表示されます。
+
+## 問題(ブロックの結合度)
+```
+def m1(*)
+  str = yield if block_given?
+  p "m1 #{str}"
+end
+
+def m2(*)
+  str = yield if block_given?
+  p "m2 #{str}"
+end
+
+m1 m2 {
+  "hello"
+}
+```
+### 解説
+問題のコードで使用されているメソッド類は以下の通りです。
+
+Kernel#block_given?はブロックが渡された場合は、真になります。
+yieldはブロックの内容を評価します。
+{ }はdo endよりも結合度が高い為、実行結果に差が出ます。
+問題のコードは以下のように解釈されます。
+
+m2へブロックが渡され、m2 helloが表示されます。
+m1へは引数が渡され、ブロックは渡されません。よって、m1が表示されます。
+```
+m1 (m2 {
+      "hello"
+    }
+)
+
+# 実行結果
+# "m2 hello"
+# "m1 "
+```
+問題のコードをdo endで置き換えた場合は以下の実行結果になります。
+```
+m1 m2 do  # m1(m2) do と解釈されます。
+  "hello"
+end
+
+# 実行結果
+# "m2 "
+# "m1 hello"
+```
+
 ## 問題(ブロック引数)
 ```
 def bar(&block, n)
@@ -1437,24 +1485,806 @@ p c.refer_const
 ### 解説
 refer_constはモジュールMにありますが、CONSTはレキシカルに決定されるためモジュールMのスコープを探索します。
 この問題ではCONSTが見つからないため例外が発生します。
-## 問題()
+## 問題(Kernel)
 ```
+Kernelモジュールで定義されているメソッドを選んでください。
+```
+### 解説
+Kernel#Array、Kernel#Hash、Kernel#StringはKernelのモジュール関数として定義されています。
+Kernel#Dateはありません。
+
+これらのメソッドは次のように使います。
+```
+p Array("Awesome Array") #=> ["Awesome Array"]
+p Hash(awesome_key: :value) #=> {:awesome_key=>:value}
+p String('0123456789') #=> "0123456789"
+```
+
+## 問題(lazy)
+```
+次のプログラムはEnumerator::Lazyを使っています。
+先頭から5つの値を取り出すにはどのメソッドが必要ですか
+(1..100).each.lazy.chunk(&:even?)
+```
+### 解説
+値を取り出すには、Enumerator::Lazy#forceまたはEnumerator::Lazy#firstを呼び出す必要があります。
+
+問題文には「先頭から5つ」とあるので、first(5)として取り出します。
+また、Enumerator::Lazy#forceで問題文の通りにするにはEnumerator::Lazy#takeも利用します。
+
+Enumerator::Lazy#takeはEnumerable#takeと違いEnumerator::Lazyのインスタンスを戻り値にします。
+そのインスタンスからEnumerator::Lazy#forceで実際の値を取り出します。
+
+
+```
+irb(main):094:0> i = (1..100).each.lazy.chunk(&:even?)
+=> #<Enumerator::Lazy: ...>
+irb(main):095:0>
+irb(main):096:0> i.take(5)
+=> #<Enumerator::Lazy: ...>
+irb(main):097:0> i.take(5).force
+=> [[false, [1]], [true, [2]], [false, [3]], [true, [4]], [false, [5]]]
+irb(main):098:0> i.first(5)
+=> [[false, [1]], [true, [2]], [false, [3]], [true, [4]], [false, [5]]]
+irb(main):099:0> i.first(5).force
+(irb):99:in `<main>': undefined method `force' for [[false, [1]], [true, [2]], [false, [3]], [true, [4]], [false, [5]]]:Array (NoMethodError)
+	from /Users/hatajunnosuke/.rbenv/versions/3.1.0/lib/ruby/gems/3.1.0/gems/irb-1.6.4/exe/irb:9:in `<top (required)>'
+	from /Users/hatajunnosuke/.rbenv/versions/3.1.0/bin/irb:25:in `load'
+	from /Users/hatajunnosuke/.rbenv/versions/3.1.0/bin/irb:25:in `<main>'
+```
+## 問題(継承のタイミング)
+```
+class Base
+  def name
+    p 'Base#name'
+  end
+end
+
+module Scope
+  class Base
+    def name
+      p 'Scope::Base#name'
+    end
+  end
+
+  class Inherited < Base
+    def name
+      p 'Scope::Inherited#name'
+      super
+    end
+  end
+end
+
+inherited = Scope::Inherited.new
+inherited.name
 
 ```
 ### 解説
+クラスInheritedの親クラスBaseがどのように決定されるかがこの問題のポイントです。
+クラスはRubyでは定数です。定数の探索はレキシカルスコープを利用します。
+
+親クラスBaseの探索はモジュールScopeから始まります。
+レキシカルスコープにクラス（定数）Baseが見つかったので、クラスInheritedの親クラスBaseはScope::Baseとなります。
+```
+class Base
+  def name
+    p 'Base#name'
+  end
+end
+
+module Scope
+  class Base
+    def name
+      p 'Scope::Base#name'
+    end
+  end
+
+  class Inherited < Base # クラスScope::Baseとして解釈される
+    def name
+      p 'Scope::Inherited#name'
+      super
+    end
+  end
+end
+```
+もし、クラスBaseがクラスInheritedより前に定義されていないのであれば動作が変わります。
+継承を定義した時点でScope::BaseをRubyは見つけることができないので、親クラスBaseはトップレベルにあるクラスを参照します。
+```
+class Base
+  def name
+    p 'Base#name'
+  end
+end
+
+module Scope
+  class Inherited < Base # トップレベルにあるクラスBaseとして解釈される
+    def name
+      p 'Scope::Inherited#name'
+      super
+    end
+  end
+
+  class Base
+    def name
+      p 'Scope::Base#name'
+    end
+  end
+end
+
+inherited = Scope::Inherited.new
+inherited.name
+
+# 結果は次の通り
+# "Scope::Inherited#name"
+# "Base#name"
+```
+## 問題(method_missing)
+```
+module M
+  def method_missing(id, *args)
+    puts "M#method_missing"
+  end
+end
+class A
+  include M
+  def method_missing(id, *args)
+    puts "A#method_missing"
+  end
+end
+class B < A
+  def method_missing(id, *args)
+    puts "B#method_missing"
+  end
+end
+
+obj = B.new
+obj.dummy_method
+```
+### 解説
+method_missingは、継承チェーンを辿った末にメソッドが見つからなかった場合に、呼び出されます。
+method_missingも継承チェーンを辿ります。
+
+よって、B#method_missingが出力されます。
+
 
 ## 問題()
 ```
+p Class.method_defined? :new
+p String.method_defined? :new
+p Class.singleton_class.method_defined? :new
+p String.singleton_class.method_defined? :new
+```
+### 解説
+Stringクラスはクラスメソッドnewでインスタンスを生成します。
+StringクラスはClassクラスのインスタンスですので、StringクラスにあるnewはClassクラスのインスタンスメソッドです。
+また、ClassクラスはRubyで多種多様なクラスを生成しますので、Classにもクラスメソッドとしてnewがあります。
+```
+str = String.new("Awesome String") # new は Class のインスタンスメソッド
+# str.new こういった呼び方は出来ない
+Klass = Class.new # new は Class のクラスメソッド
+```
+表示される内容の組み合わせは次のとおりです。
+```
+p Class.method_defined? :new #=> ture
+p String.method_defined? :new #=> false
+p Class.singleton_class.method_defined? :new #=> ture
+p String.singleton_class.method_defined? :new #=> ture
+```
+## 問題(Enumeratorオブジェクトの作成)
+```
+module Enumerable
+  def with_prefix(prefix)
+    return to_enum(__(1)__, prefix) { size } unless block_given?
+
+    each do |char|
+      yield "#{prefix} #{char}"
+    end
+  end
+end
+
+[1,2,3,4,5].with_prefix("Awesome").reverse_each {|char|
+  puts char
+}
+# 実行結果
+Awesome 5
+Awesome 4
+Awesome 3
+Awesome 2
+Awesome 1
+```
+### 解説
+ブロックを渡さない場合は、Enumeratorオブジェクトを作成してメソッドをチェーン出来るようにします。
+
+Enumeratorオブジェクトを作成するためには、to_enumまたは、enum_forを呼びます。これらの引数にメソッド名をシンボルで指定することでチェーンした先でブロックを渡されたときにどのメソッドを評価すればよいかが分かります。
+
+この問題では、with_prefixを再び評価する必要がありますので、__method__または:with_prefixを引数に指定します。__method__はメソッドの中で呼び出すと、そのメソッド名になります。
+```
+def awesome_method
+  __method__
+end
+
+p awesome_method # :awesome_methodとシンボルでメソッド名が分かります
+```
+## 問題()
+```
+class C
+  @@val = 10
+end
+
+module B
+  @@val = 30
+end
+
+module M
+  include B
+  @@val = 20
+
+  class << C
+    p @@val
+  end
+end
+```
+### 解説
+クラス変数はクラスに所属するあらゆるもので情報を共有する為にあり、
+特異クラス定義の中でクラス変数を定義してもレキシカルに決定されます。
+
+次のプログラムではクラス変数は共有されます。
+```
+class C
+  class << self
+    @@val = 10
+  end
+end
+
+p C.class_variable_get(:@@val) # 10が表示される
+```
+この問題ではクラスCの特異クラス定義をモジュールMで行っています。
+クラス変数はレキシカルに決定されますので答えは20です。
+
+
+## 問題(Fiber)
+```
+次のプログラムで例外FiberErrorが発生する、Fiber#resumeの組み合わせを選択肢から選んでください。
+
+f = Fiber.new do
+  Fiber.yield 15
+  5
+end
 
 ```
 ### 解説
+Fiberは軽量スレッドを提供します。
+
+Fiber#resumeを実行するとFiber.yieldが最後に実行された行から再開するか、Fiber.newに指定したブロックの最初の評価を行います。
+
+サンプルプログラムを実行して、処理の内容を見てみましょう。
+```
+f = Fiber.new do |name|
+  Fiber.yield "Hi, #{name}"
+end
+
+p f.resume('Matz') # 'Hi, Matz'と表示されます。
+p f.resume('Akira') # 'Akira'と表示されます。
+p f.resume('Steve') # FiberErrorが発生します。
+```
+1. f.resume('Matz')を実行する。
+2. Fiber.newのブロックを評価し、引数nameには'Matz'をセットする。
+3. 変数を展開して、'Hi, Matz'をFiber.yieldの引数にセットする。
+4. Fiber.yield('Hi, Matz')を実行すると、f.resume('Matz')の戻り値が'Hi, Matz'になる。Fiber.yield('Hi, Matz')は終了せず、次のf.resume('Akira')の実行を待つ。
+5. f.resume('Akira')を実行するとFiber.yield('Hi, Matz')の戻り値が'Akira'になる。
+6. ブロックの最終行なので、'Akira'がf.resume('Akira')の戻り値になる。
+問題の処理の内容は次のとおりです。
+```
+f = Fiber.new do
+  Fiber.yield 15
+  5
+end
+
+f.resume
+f.resume
+f.resume
+f.resume
+```
+1. １行目のf.resumeを実行する。
+2. Fiber.newのブロックを評価する。
+3. Fiber.yield(15)を実行すると、１行目のf.resumeの戻り値が15になる。Fiber.yield(15)は終了せず、次の２行目のf.resumeの実行を待つ。
+4. ２行目のf.resumeを実行すると、Fiber.yield(15)の戻り値がnilになる。なお、Fiber#resumeに引数なしで実行すると、Fiber.yieldの戻り値はnilになります。
+5. 処理を次の行に移り、ブロック最終行の5が２行目のf.resumeの戻り値になります。
+6. ３行目のf.resumeを実行するが、ブロックの評価が終わっているので例外FiberErrorが発生します。
+この問題の答えは、３回以上呼び出す
+```
+f.resume
+f.resume
+f.resume
+```
+または、
+```
+f.resume
+f.resume
+f.resume
+f.resume
+```
+がこの問題の答えになります。
+## 問題(定数の参照)
+```
+class C
+  CONST = "Good, night"
+end
+
+module M
+  CONST = "Good, evening"
+end
+
+module M
+  class C
+    CONST = "Hello, world"
+  end
+end
+
+module M
+  class C
+    p CONST
+  end
+end
+```
+### 解説
+この問題ではクラスCにある定数CONSTを参照していますが、トップレベルにあるものとは別になります。
+
+例えば次のプログラムですと、クラスCが2つあるように見えます。
+ネストを調べるとモジュールMにあるクラスCはM::Cと表示されています。
+このように修飾された場合は同じ名前であっても別のものになります。
+```
+class C
+  p Module.nesting # [C]と表示されます
+end
+
+module M
+  class C
+    p Module.nesting # [M::C, M]と表示されます
+  end
+end
+```
+この問題では修飾済みのM::CにあるCONSTを参照しますので、"Hello, world"を表示します。
+## 問題(Refinementのsuper)
+```
+class C
+end
+
+module M
+  refine C do
+    def m1(value)
+      super value - 100
+    end
+  end
+end
+
+class C
+  def m1(value)
+    value - 100
+  end
+end
+
+using M
+
+class K < C
+  def m1(value)
+    super value - 100
+  end
+end
+
+puts K.new.m1 400
+```
+### 解説
+superを実行した場合にもRefinementが影響します。理解しやすいようにそれぞれのメソッドにコメントと計算の途中結果を追加しました。
+```
+class C
+end
+
+module M
+  refine C do
+    def m1(value)
+      p "define m1 using Refinement"
+      super value - 100 # 300 - 100
+    end
+  end
+end
+
+class C
+  def m1(value)
+    p "define m1 in C"
+    value - 100 # 200 - 100
+  end
+end
+
+using M # ここからRefinementが有効になる
+
+class K < C
+  def m1(value)
+    p "define m1 in K"
+    super value - 100 # 400 - 100
+    # Refinementが有効なのでsuperはモジュールMにあるm1を参照する
+  end
+end
+
+puts K.new.m1 400
+```
+プログラムを実行するとコメントは次の順に表示されます。
+```
+"define m1 in K"
+"define m1 using Refinement"
+"define m1 in C"
+```
+superを実行したクラスの親クラスにRefinemnetがあれば同名のメソッドを探索して実行します。  
+
+さらに、Refinementのなかでsuperを実行するとRefinementの対象クラスのメソッドを探索します。
+
+
+## 問題(定数の参照)
+```
+class Ca
+  CONST = "001"
+end
+
+class Cb
+  CONST = "010"
+end
+
+class Cc
+  CONST = "011"
+end
+
+class Cd
+  CONST = "100"
+end
+
+module M1
+  class C0 < Ca
+    class C1 < Cc
+      class C2 < Cd
+        p CONST
+
+        class C2 < Cb
+        end
+      end
+    end
+  end
+end
+選択
+
+```
+### 解説
+Rubyは定数の参照はレキシカルに決定されますが、この問題ではレキシカルスコープに定数はありません。
+レキシカルスコープに定数がない場合は、スーパークラスの探索を行います。
+
+この問題では、クラスC2のスコープで定数を参照しています。
+クラスC2のスーパークラスはクラスCdですので"100"が正解になります。
+## 問題(selfの定義)
+```
+class Human
+  NAME = "Unknown"
+
+  def self.name
+    const_get(:NAME)
+  end
+end
+
+class Fukuzawa < Human
+  NAME = "Yukichi"
+end
+
+puts Fukuzawa.name
+```
+### 解説
+Class#nameはクラス名を文字列で返します。
+Human#nameクラスはClass#nameをオーバーライドしているので、const_getが呼ばれます。
+
+const_getは、selfに定義された定数を探索します。自クラスに定義がない場合は、メソッドと同様に探索を行います。
+
+問題コードの5行目時点のインスタンスはFukuzawaクラスです。
+よって、Human#nameはFukuzawaクラスのYukichiを返します。
+## 問題(includeとextend)
+```
+class Company
+  XXXX
+  attr_reader :id
+  attr_accessor :name
+  def initialize id, name
+    @id = id
+    @name = name
+  end
+  def to_s
+    "#{id}:#{name}"
+  end
+  YYYY
+end
+
+c1 = Company.new(3, 'Liberyfish')
+c2 = Company.new(2, 'Freefish')
+c3 = Company.new(1, 'Freedomfish')
+
+print c1.between?(c2, c3)
+print c2.between?(c3, c1)
+```
+### 解説
+between?で値を比較するためには、Comparableをincludeする必要があります。
+
+Comparableは比較に<=>を使用しています。
+
+自作クラスの場合はオブジェクトIDが比較対象となります。
+
+通常は、Comparable#<=>をオーバーライドします。
+
+Fixnum#<=>(other)は以下の結果を返します。
+
+selfがotherより大きい場合は、1を返します。
+
+selfがotherと等しい場合は、0を返します。
+
+selfがotherより小さい場合は、-1を返します。
+
+extendはモジュールのインスタンスメソッドを特異メソッドとして追加します。
+
+インスタンス変数からメソッドを参照することができなくなるので、エラーになります。
+
+Sortableモジュールは存在しません。
+
 
 ## 問題()
 ```
+module M
+  @@val = 75
 
+  class Parent
+    @@val = 100
+  end
+
+  class Child < Parent
+    @@val += 50
+  end
+
+  if Child < Parent
+    @@val += 25
+  else
+    @@val += 30
+  end
+end
+
+p M::Child.class_variable_get(:@@val)
 ```
 ### 解説
+クラス変数はレキシカルに決定されますが、定数と同じスコープです。
+```
+module M
+  CONST = 100
+  @@val = 200
+end
 
+module M
+  p CONST # 100 と表示されます
+  p @@val # 200 と表示されます
+end
+```
+ただし、クラス変数は上位のスコープ（外側）まで探索は行いません。（ここ大事）
+```
+module M
+  CONST = 100
+  @@val = 200
+end
+
+module M
+  class C
+    p CONST # 100 と表示されます
+    p @@val # NameError
+  end
+end
+```
+また、Module#<はクラスの継承関係を比較することが出来ます。
+
+継承をしているように見えますが、if文では継承関係を比較しています。
+
+Module#<はレシーバーが引数の子孫である場合にtrueを返します。
+
+問題にあるクラス変数はそれぞれ次のように計算されます。
+```
+module M
+  @@val = 75
+
+  class Parent
+    @@val = 100
+  end
+
+  class Child < Parent
+    @@val += 50 # @@val = 100 + 50
+  end
+
+  if Child < Parent
+    @@val += 25 # @@val = 75 + 25
+  else
+    @@val += 30 # @@val = 75 + 30
+  end
+end
+
+p M::Child.class_variable_get(:@@val)
+```
+この問題は150が表示されます。
+
+
+## 問題(::演算子→トップレベル)
+```
+class Base
+  CONST = "Hello, world"
+end
+
+class C < Base
+end
+
+module P
+  CONST = "Good, night"
+end
+
+class Base
+  prepend P
+end
+
+module M
+  class C
+    CONST = "Good, evening"
+  end
+end
+
+module M
+  class ::C
+    def greet
+      CONST
+    end
+  end
+end
+
+p C.new.greet
+```
+### 解説
+::演算子が先頭にあるとトップレベルから定数の探索を行います。
+モジュールMにあるクラスCはトップレベルにあるものを指します。
+
+greetメソッドにあるCONSTはクラスCにはありませんが、スーパークラスにあるか探索を行います。
+クラスBaseを継承していますので、"Hello, world"が表示されます。
+
+
+## 問題()
+```
+次のプログラムは"Hello, world"と表示します。
+同じ結果になる選択肢はどれですか（複数選択）
+
+module M
+  CONST = "Hello, world"
+  def self.say
+    CONST
+  end
+end
+
+p M::say
+```
+### 解説
+定数の定義はメモリ上にあるテーブルに管理されます。
+モジュールMを別々に書いたとしてもテーブルを参照して値を取得できます。
+```
+module M
+  CONST = "Hello, world"
+end
+
+module M
+  def self.say
+    CONST
+  end
+end
+
+p M::say
+```
+instance_evalの引数に文字列を指定するとネストの状態はモジュールMの特異クラスになります。
+
+CONSTはモジュールMにのみありますので、例外が発生します。
+```
+module M
+  CONST = "Hello, world"
+end
+
+M.instance_eval(<<-CODE)
+  def say
+    CONST
+  end
+CODE
+
+p M::say
+```
+特異クラス定義のコンテキストでは、ネストの状態はモジュールMの特異クラスになります。
+
+CONSTはモジュールMにのみありますので、例外が発生します。
+```
+module M
+  CONST = "Hello, world"
+end
+
+class << M
+  def say
+    CONST
+  end
+end
+
+p M::say
+```
+module_evalの引数に文字列を指定するとネストの状態はモジュールMになります。
+
+CONSTはモジュールMにありますので値を取得できます。
+```
+module M
+  CONST = "Hello, world"
+end
+
+M.module_eval(<<-CODE)
+  def self.say
+    CONST
+  end
+CODE
+
+p M::say
+```
+## 問題()
+```
+class C
+  def initialize
+    p self.class
+  end
+end
+
+class C2 < C
+end
+
+C2.new
+```
+### 解説
+selfはnewされたクラスのオブジェクトになります。
+スーパークラスでselfを参照したとしても、C2.newのオブジェクトになります。
+## 問題(usingは1度だけ)
+```
+class C
+  def m1(value)
+    100 + value
+  end
+end
+
+module R1
+  refine C do
+    def m1
+      super 50
+    end
+  end
+end
+
+module R2
+  refine C do
+    def m1
+      super 100
+    end
+  end
+end
+
+using R1
+using R2
+
+puts C.new.m1
+```
+### 解説
+同じメソッドに対してRefinementで再定義を2つのモジュールで行っています。
+
+もし、usingを2行書いたとしても1つのメソッドで有効になる再定義は1つだけです。
+
+最後に書いたusingから優先されます。
+
+この問題ではusing R2が最後に有効化されたRefinementです。
+
+有効になる再定義は1つだけですので、モジュールR2にあるsuperはクラスCにあるm1を呼び出します。
+
+よって、super + 100は100 + 100となり200が表示されるのが正解です。
 ## 問題()
 ```
 
