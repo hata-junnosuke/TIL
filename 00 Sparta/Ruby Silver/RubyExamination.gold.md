@@ -847,10 +847,20 @@ lambdaに似た機能にProcがあります。
 次の表がlambdaとProcの違いになります。
 
 特徴	Proc	lambda
+
 引数の数	曖昧	厳密
+
 引数の渡し方	Proc.new { \	x, y\
+
 return, brake, next	call以降が実行されない	call以降も実行される
+
 問題の解答はエラーが発生する
+
+そのほか、lambdaはアロー演算子で定義することができます。
+```
+calc = -> (x, y) { x * y }
+calc.call(5, 3) #=> 15
+```
 ## 問題(メソッドと変数の探索順位)
 ```
 def foo(n)
@@ -2285,17 +2295,303 @@ puts C.new.m1
 有効になる再定義は1つだけですので、モジュールR2にあるsuperはクラスCにあるm1を呼び出します。
 
 よって、super + 100は100 + 100となり200が表示されるのが正解です。
-## 問題()
+## 問題(evalのまとめ)
+### 文字列を渡すパターン
+**instance_eval**の引数に文字列を指定するとネストの状態はモジュールMの特異クラスになります。
+
+CONSTはモジュールMにのみありますので、例外が発生します。
+```
+module M
+  CONST = "Hello, world"
+end
+
+M.instance_eval(<<-CODE)
+  def say
+    CONST
+  end
+CODE
+
+p M::say
 ```
 
+**module_eval**の引数に文字列を指定するとネストの状態はモジュールMになります。
+
+CONSTはモジュールMにありますので値を取得できます。
+```
+module M
+  CONST = "Hello, world"
+end
+
+M.module_eval(<<-CODE)
+  def self.say
+    CONST
+  end
+CODE
+
+p M::say
 ```
 ### 解説
 
-## 問題()
+## 問題(includeはインスタンスメソッドをMix~in)
 ```
+module M
+  def class_m
+    "class_m"
+  end
+end
 
+class C
+  include M
+end
+
+p C.methods.include? :class_m
 ```
 ### 解説
+includeはModuleのインスタンスメソッドをMix-inするメソッドです。
+C.methodsはCの特異メソッドを表示します。
+
+よって、C#class_mはインスタンスメソッドです、C.methodsでは表示されません。
+## 問題(extendは特異メソッドとして追加)
+```
+module M
+  def class_m
+    "class_m"
+  end
+end
+
+class C
+  extend M
+end
+
+p C.methods.include? :class_m
+```
+### 解説
+extendは引数に指定したモジュールのメソッドを特異メソッドとして追加します。
+
+問題のC.methods...は特異メソッドの一覧を取得します。
+## 問題(正規表現)
+```
+p "Matz is my tEacher".scan(/[is|my]/).length
+```
+### 解説
+問題で使用されている正規表現の説明は下記の通りです。
+
+String#scanはマッチした部分文字列を配列で返します。
+正規表現の[]は囲まれた文字1つ1つにマッチします。
+|は正規表現ではORのメタ文字です。
+今回は、|が[]に囲まれているため、これもマッチ対象になります。
+問題のコードでscan(/[is|my]/)が返す配列は["i", "s", "m", "y"]になります。
+
+```
+ p "Matz is my tEacher".scan(/[is|my]/).length
+4
+=> 4
+```
+## 問題(sort)
+```
+class Company
+  attr_reader :id
+  attr_accessor :name
+  def initialize id, name
+    @id = id
+    @name = name
+  end
+  def to_s
+    "#{id}:#{name}"
+  end
+  def <=> other
+    other.id <=> self.id
+  end
+end
+
+companies = []
+companies << Company.new(2, 'Liberyfish')
+companies << Company.new(3, 'Freefish')
+companies << Company.new(1, 'Freedomfish')
+
+companies.sort!
+
+companies.each do |e|
+  puts e
+end
+```
+### 解説
+selfが右辺にあるときは降順になる。
+## 問題(<< メソッド)
+```
+enum_char = Enumerator.new do |yielder|
+  "apple".each_char do |chr|
+    __(1)__
+  end
+end
+
+array = enum_char.map do |chr|
+  chr.ord
+end
+
+p array
+```
+### 解説
+mapメソッドのブロックはEnumeratorオブジェクトをレシーバーとした場合にEnumerator::Yielderオブジェクトとなります。この問題のプログラム上では変数yielderを指します。
+
+Enumerator::Yielderを評価するには、<<を呼び出します。
+選択肢にある他のメソッドは実装されていません。
+## 問題(特異メソッド？)
+```
+class C
+  @val = 3
+  attr_accessor :val
+  class << self
+    @val = 10
+  end
+  def initialize
+    @val *= 2 if val
+  end
+end
+
+c = C.new
+c.val += 10
+
+p c.val
+```
+### 解説
+問題のコードは、13行目でc.valがnilになり、実行エラーになります。
+
+2行目の@valはクラスインスタンス変数といい、特異メソッドからアクセスすることができます。
+
+3行目の@valは特異クラスのクラスインスタンス変数です。
+
+この値にアクセスするためには以下のようにアクセスします。
+```
+class << C
+  p @val
+end
+```
+13行目のc.valはattr_accessorよりアクセスされます。
+
+initializeメソッドで初期化が行われていないため、nilが返されます。
+## 問題()
+```
+class Array
+  def succ_each(step = 1)
+    return enum_for(:succ_each, step) unless block_given?
+
+    each do |int|
+      yield int + step
+    end
+  end
+end
+
+p [98, 99, 100].succ_each(2).map {|succ_chr| succ_chr.chr}
+
+[101, 102, 103].succ_each(5) do |succ_chr|
+  p succ_chr.chr
+end
+```
+```
+# 実行結果
+["d", "e", "f"]
+"j"
+"k"
+"l"
+```
+### 解説
+ブロックを渡す場合と、チェーンを行う場合の両方を考慮する必要があります。
+チェーンを行う場合はEnumeratorオブジェクトを作成する必要があります。作成に必要なメソッドはenum_forとto_enumです。
+
+問題では、enum_forを使っていますので選択肢のうちto_enumを使っている選択肢が答えのひとつです。
+ただし、to_enumは引数にメソッド名とそのメソッドに必要な引数を指定する必要があります。問題ではsucc_eachメソッドに引数2を渡していますのでEnumeratorオブジェクトを作成するときに必要になります。
+
+また、Enumeratorオブジェクトはnewメソッドで作成することが出来ます。この問題ですと少し冗長ではありますが、全体的には次のとおりです。
+```
+class Array
+  def succ_each(step = 1)
+    unless block_given? # ブロックが無い場合は、オブジェクトを作成
+      Enumerator.new do |yielder|
+        each do |int|
+          yielder << int + step
+        end
+      end
+    else # ブロックがある場合の実装
+      each do |int|
+        yield int + step
+      end
+    end
+  end
+end
+```
+これも答えのひとつで、この問題ではto_enum(:succ_each, step)とEnumeratorオブジェクトを作成する選択肢が答えになります。
+
+なお、チェーンした先で渡されたブロックを評価するためにはEnumerator::Yielderのオブジェクトを利用します。
+オブジェクトに対して、<<を実行することでブロック内で評価した結果を受け取ることが出来ます。
+
+
+## 問題(演算子の優先度)
+```
+v1 = 1 / 2 == 0
+v2 = !!v1 or raise RuntimeError
+puts v2 and false
+```
+### 解説
+1行目では、Fixnumクラス同士の除算はFixnumクラスになります。
+
+よって、0 == 0が評価され、v1はtrueになります。
+
+2行目では、orは左辺が真であればその結果を返します。この時、右辺は評価されません。
+
+左辺が偽であれば、右辺を評価しその結果を返します。
+
+また、orは評価する優先順位が低い演算子です。
+
+よって、優先順位が低いのでv2には!!v1の結果のtrueが入ります。
+
+次に、!!v1 or raise RuntimeErrorが評価され、左辺が真であるため、左辺のみ評価されます。
+
+3行目では、andは左辺が真であれば、右辺の結果を返します。左辺が偽であれば、左辺の結果を返します。
+
+また、andは評価する優先順位が低い演算子です。
+
+よって、優先順位が低いのでputs v2が評価されます。
+
+演算子の優先順位を適切にするためには、括弧で式を区切ります。
+## 問題(特異クラスの継承関係)
+```
+class C
+  CONST = "Hello, world"
+end
+
+$c = C.new
+
+class D
+  class << $c
+    def say
+      CONST
+    end
+  end
+end
+
+p $c.say
+```
+### 解説
+レキシカルスコープには定数はありません。その場合はスーパークラスを探索します。
+特異クラスの継承関係にクラスCがありますので定数を見つけることができます。
+
+参考：特異クラスの継承関係
+```
+[#<Class:#<C:0x007fa4741607e0>>, C, Object, Kernel, BasicObject]
+```
+## 問題()
+```
+def hoge(*args, &block)
+  block.call(args)
+end
+
+hoge(1,2,3,4) do |*args|
+  p args.length < 0 ? "hello" : args
+end
+```
+### 解説
+ブロックのargsここは配列らしい。。
 
 ## 問題()
 ```
