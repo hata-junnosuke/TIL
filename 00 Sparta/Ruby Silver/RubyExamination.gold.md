@@ -2593,11 +2593,91 @@ end
 ### 解説
 ブロックのargsここは配列らしい。。
 
-## 問題()
+## 問題(特異クラス)
 ```
+class C
+  def self._singleton
+    class << C
+      self
+    end
+  end
+end
 
+p C._singleton
 ```
 ### 解説
+Object.singleton_classを利用すると特異クラスを取得することが出来ます。
+
+特異クラスでselfを参照するとレシーバのオブジェクトがとれます。この選択肢では、クラスCが取得できます。
+```
+irb(main):256:0>例題
+irb(main):257:1* class C
+irb(main):258:2*   def self._singleton
+irb(main):259:3*     class << C
+irb(main):260:3*       self
+irb(main):261:2*     end
+irb(main):262:1*   end
+irb(main):263:0> end
+=> :_singleton
+irb(main):264:0>
+irb(main):265:0> p C._singleton
+#<Class:C>
+=> #<Class:C>
+irb(main):266:0>選択肢1
+irb(main):267:1* class C
+irb(main):268:2*   def self._singleton
+irb(main):269:3*     class << C
+irb(main):270:3*       val = self
+irb(main):271:2*     end
+irb(main):272:2*     val
+irb(main):273:1*   end
+irb(main):274:0> end
+=> :_singleton
+irb(main):275:0>
+irb(main):276:0> p C._singleton
+(irb):272:in `_singleton': undefined local variable or method `val' for C:Class (NameError)
+Did you mean?  @val
+               eval
+	from (irb):276:in `<main>'
+	from /Users/hatajunnosuke/.rbenv/versions/3.1.0/lib/ruby/gems/3.1.0/gems/irb-1.6.4/exe/irb:9:in `<top (required)>'
+	from /Users/hatajunnosuke/.rbenv/versions/3.1.0/bin/irb:25:in `load'
+	from /Users/hatajunnosuke/.rbenv/versions/3.1.0/bin/irb:25:in `<main>'
+irb(main):277:0>選択肢2
+irb(main):278:1* class C
+irb(main):279:0> end
+=> nil
+irb(main):280:0>
+irb(main):281:1* def C._singleton
+irb(main):282:1*   self
+irb(main):283:0> end
+=> :_singleton
+irb(main):284:0>
+irb(main):285:0> p C._singleton
+C
+=> C
+irb(main):286:0>選択肢3
+irb(main):287:1* class C
+irb(main):288:0> end
+=> nil
+irb(main):289:0>
+irb(main):290:1* class << C
+irb(main):291:2*   def _singleton
+irb(main):292:2*     self
+irb(main):293:1*   end
+irb(main):294:0> end
+=> :_singleton
+irb(main):295:0>
+irb(main):296:0> p C._singleton
+C
+=> C
+irb(main):297:0>選択肢4
+irb(main):298:1* class C
+irb(main):299:0> end
+irb(main):300:0> p C.singleton_class
+#<Class:C>
+=> #<Class:C>
+irb(main):301:0>
+```
 
 ## 問題()
 ```
