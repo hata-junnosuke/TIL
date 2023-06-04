@@ -1045,7 +1045,7 @@ p 1 + 1
 
 ## 問題(ブロック変数)
 ```
-1: def hoge(*args, &block)
+1: def hoge(*, &block)
 2:   block.call(args)
 3: end
 4: 
@@ -2678,6 +2678,188 @@ irb(main):300:0> p C.singleton_class
 => #<Class:C>
 irb(main):301:0>
 ```
+
+## 問題(複素数)
+```
+次のコードを実行するとどうなりますか
+
+val = 1i * 1i
+puts val.class
+```
+### 解説
+1iは複素数(Complex)のオブジェクトを表します。
+Complex同士の演算はComplexを返します。
+
+
+## 問題()
+```
+次のコードを実行するとどうなりますか
+
+p [1,2,3,4].map(&self.method(:*))
+
+```
+### 解説
+問題のselfはObjectクラスのインスタンスになります。
+Objectクラスには*メソッドが定義されていないためエラーになります。
+
+## 問題()
+```
+val = 100
+
+def method(val)
+  yield(15 + val)
+end
+
+_proc = Proc.new{|arg| val + arg }
+
+p method(val, __(1)__)
+```
+### 解説
+Procオブジェクトをメソッドで実行するにはブロックに変換する必要があります。
+&をProcオブジェクトのプレフィックスにすることでブロックに変換することが出来ます。
+
+また、to_procメソッドはProcオブジェクトを生成して返します。Procオブジェクトをレシーバにto_procを実行するとレシーバ自身が返ってきます。
+
+この問題の答えは、&_proc.to_procと&_procです。
+## 問題()
+```
+class Foo
+  def initialize(num)
+    @hoge = num
+  end
+end
+
+num = (1..99).to_a.shuffle.first
+foo = Foo.new(num)
+
+__(1)__
+```
+### 解説
+inspectは Object クラスに定義されており,String,Array,Hashなどのクラスにオーバーライドされています。レシーバーを文字列などに変換して表示してくれるためデバックなどに用いられます。
+また、今回の設問のようにインスタンスオブジェクトに対してinspectメソッドを呼ぶことでインスタンス変数の値を表示することができます。
+
+pメソッドにはinspectメソッドが用いられているため選択肢puts foo.inspectと同じ出力になります。
+```
+class Foo
+  def initialize
+    @num = 3
+  end
+end
+
+sample = Foo.new
+p sample
+puts sample.inspect
+
+#<Foo:0x00007fc2828f4700 @num=3>
+#<Foo:0x00007fc2828f4700 @num=3>
+```
+```
+irb(main):001:1* class Foo
+irb(main):002:2*   def initialize(num)
+irb(main):003:2*     @hoge = num
+irb(main):004:1*   end
+irb(main):005:0> end
+=> :initialize
+irb(main):006:0>
+irb(main):007:0> num = (1..99).to_a.shuffle.first
+irb(main):008:0> foo = Foo.new(num)
+=> #<Foo:0x0000000104dafd68 @hoge=27>
+irb(main):009:0> p foo
+#<Foo:0x0000000104dafd68 @hoge=27>
+=> #<Foo:0x0000000104dafd68 @hoge=27>
+irb(main):010:0> puts foo.inspect
+#<Foo:0x0000000104dafd68 @hoge=27>
+=> nil
+irb(main):011:0> puts foo.hoge
+(irb):11:in `<main>': undefined method `hoge' for #<Foo:0x0000000104dafd68 @hoge=27> (NoMethodError)
+	from /Users/hatajunnosuke/.rbenv/versions/3.1.0/lib/ruby/gems/3.1.0/gems/irb-1.6.4/exe/irb:9:in `<top (required)>'
+	from /Users/hatajunnosuke/.rbenv/versions/3.1.0/bin/irb:25:in `load'
+	from /Users/hatajunnosuke/.rbenv/versions/3.1.0/bin/irb:25:in `<main>'
+irb(main):012:0> puts foo.to_s
+#<Foo:0x0000000104dafd68>
+=> nil
+```
+
+## 問題()
+```
+class S
+  def initialize
+    puts "S#initialize"
+  end
+end
+
+class C < S
+  def initialize(*args)
+    super
+    puts "C#initialize"
+  end
+end
+
+C.new(1,2,3,4,5)
+```
+### 解説
+問題のコードはArgumentError: wrong number of arguments (5 for 0)が発生します。
+
+superと呼び出した場合は、現在のメソッドと同じ引数が引き継がれます。
+引数を渡さずにオーバーライドしたメソッドを呼び出す際はsuper()とします。
+## 問題()
+```
+class C
+end
+
+module M
+  refine C do
+    def m1
+      100
+    end
+  end
+end
+
+class C
+  def m1
+    400
+  end
+
+  def self.using_m
+    using M
+  end
+end
+
+C.using_m
+
+puts C.new.m1
+```
+### 解説
+usingはメソッドの中で呼び出すことは出来ません。呼び出した場合はRuntimeErrorが発生します。
+## 問題()
+```
+
+```
+### 解説
+
+## 問題()
+```
+
+```
+### 解説
+
+## 問題()
+```
+
+```
+### 解説
+
+## 問題()
+```
+
+```
+### 解説
+
+## 問題()
+```
+
+```
+### 解説
 
 ## 問題()
 ```
