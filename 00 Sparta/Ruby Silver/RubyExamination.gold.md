@@ -2831,18 +2831,65 @@ puts C.new.m1
 ```
 ### 解説
 usingはメソッドの中で呼び出すことは出来ません。呼び出した場合はRuntimeErrorが発生します。
-## 問題()
+## 問題(Fiber)
 ```
+fiber = Fiber.new do
+  __(1)__ 'Hi, there!'
+end
 
-```
-### 解説
-
-## 問題()
-```
-
+p __(2)__
 ```
 ### 解説
+Fiberは軽量スレッドを提供します。
 
+Fiber#resumeを実行するとFiber.yieldが最後に実行された行から再開するか、Fiber.newに指定したブロックの最初の評価を行います。
+
+```
+fiber = Fiber.new do
+  Fiber.yield 'Hi, there!'
+end
+
+p fiber.resume
+```
+## 問題(includeのやり方)
+```
+irb(main):001:1* module M1
+irb(main):002:0> end
+=> nil
+irb(main):003:0>
+irb(main):004:1* module M2
+irb(main):005:0> end
+=> nil
+irb(main):006:0>
+irb(main):007:1* class C
+irb(main):008:1*   include M1
+irb(main):009:1*   include M2
+irb(main):010:0> end
+=> C
+irb(main):011:0>
+irb(main):012:0> p C.ancestors
+[C, M2, M1, Object, PP::ObjectMixin, Kernel, BasicObject]
+=> [C, M2, M1, Object, PP::ObjectMixin, Kernel, BasicObject]
+
+irb(main):074:1* module M1
+irb(main):075:0> end
+=> nil
+irb(main):076:0>
+irb(main):077:1* module M2
+irb(main):078:0> end
+=> nil
+irb(main):079:0>
+irb(main):080:1* class C
+irb(main):081:1*   include M1, M2
+irb(main):082:0> end
+=> C
+irb(main):083:0>
+irb(main):084:0> p C.ancestors
+[C, M1, M2, Object, PP::ObjectMixin, Kernel, BasicObject]
+=> [C, M1, M2, Object, PP::ObjectMixin, Kernel, BasicObject]
+```
+### 解説
+一度にincludeするか、分けてincludeするかで順番が変わる！！
 ## 問題()
 ```
 
