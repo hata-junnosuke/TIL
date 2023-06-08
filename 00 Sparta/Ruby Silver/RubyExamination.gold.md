@@ -2914,6 +2914,291 @@ irb(main):084:0> p C.ancestors
 ```
 ### 解説
 
+
+## ~eval
+## 問題(instance_eval)
+```
+m = Module.new
+
+CONST = "Constant in Toplevel"
+
+_proc = Proc.new do
+  CONST = "Constant in Proc"
+end
+
+m.instance_eval(<<-EOS)
+  CONST = "Constant in Module instance"
+
+  def const
+    CONST
+  end
+EOS
+
+m.module_eval(&_proc)
+
+p m.const
+```
+### 解説
+メソッドconstは特異クラスで定義されていますので、実行することができます。
+その中で参照している定数CONSTはレキシカルに決定されますので、"Constant in Module instance"が表示されます。
+
+instance_evalはブロックを渡す場合と、文字列を引数とする場合でネストの状態が異なります。
+ブロックを渡した場合はネストは変わりませんが、文字列を引数とした場合は期待するネストの状態になります。ネストが変わらない状態で定数の代入を行うと、再代入になり警告が表示される場合があります。
+例えば、次のプログラムではmodule_evalに文字列を引数とするとモジュールを再オープン、または定義したネストと同じです。
+```
+module M
+  p Module.nesting # [M]
+end
+
+M.module_eval(<<-EVAL)
+  p Module.nesting # [M]
+EVAL
+
+M.instance_eval do
+  p Module.nesting # []
+end
+
+module M
+  p Module.nesting # [M]
+end
+```
+
+## 問題(ネストの状態)
+```
+次のプログラムは"Hello, world"と表示します。
+同じ結果になる選択肢はどれですか（複数選択）
+
+module M
+  CONST = "Hello, world"
+
+  class C
+    def awesome_method
+      CONST
+    end
+  end
+end
+
+p M::C.new.awesome_method
+
+```
+### 解説
+定数の参照はレキシカルに行われます。
+M::C#awesome_methodのコンテキストにCONSTがないため例外が発生します。
+```
+module M
+  CONST = "Hello, world"
+end
+
+class M::C
+  def awesome_method
+    CONST
+  end
+end
+
+p M::C.new.awesome_method
+```
+class_evalにブロックを渡した場合は、ブロック内のネストはモジュールMになります。
+そのコンテキストから定数を探しますので"Hello, world"が表示されます。
+```
+class C
+end
+
+module M
+  CONST = "Hello, world"
+
+  C.class_eval do
+    def awesome_method
+      CONST
+    end
+  end
+end
+
+p C.new.awesome_method
+```
+class_evalに文字列を渡した場合のネストの状態はクラスCです。
+CONSTはクラスCにありますので"Hello, world"が表示されます。
+```
+class C
+  CONST = "Hello, world"
+end
+
+module M
+  C.class_eval(<<-CODE)
+    def awesome_method
+      CONST
+    end
+  CODE
+end
+
+p C.new.awesome_method
+```
+class_evalにブロックを渡した場合は、ブロック内のネストはモジュールMになります。
+そのコンテキストから定数を探しますがないため例外が発生します。
+```
+class C
+  CONST = "Hello, world"
+end
+
+module M
+  C.class_eval do
+    def awesome_method
+      CONST
+    end
+  end
+end
+
+p C.new.awesome_method
+```
+
+## 問題(module_evalに文字列)
+```
+module A
+  B = 42
+
+  def f
+    21
+  end
+end
+
+A.module_eval(<<-CODE)
+  def self.f
+    p B
+  end
+CODE
+
+B = 15
+
+A.f
+
+```
+### 解説
+module_evalに文字列を引数とした場合は、レシーバーのスコープで評価されます。
+問題のプログラムを次のようにするとネストの状態を調べることができます。
+```
+A.module_eval(<<-CODE)
+  p Module.nesting # [A]と表示され、モジュールAのスコープにあることがわかる
+CODE
+```
+定数は静的に探索が行われますので、A::Bの42が答えになります。
+
+## 問題()
+```
+次のプログラムは"Hello, world"と表示します。
+同じ結果になる選択肢はどれですか（複数選択）
+
+module M
+  CONST = "Hello, world"
+  def self.say
+    CONST
+  end
+end
+
+p M::say
+```
+### 解説
+定数の定義はメモリ上にあるテーブルに管理されます。
+モジュールMを別々に書いたとしてもテーブルを参照して値を取得できます。
+```
+module M
+  CONST = "Hello, world"
+end
+
+module M
+  def self.say
+    CONST
+  end
+end
+
+p M::say
+```
+instance_evalの引数に文字列を指定するとネストの状態はモジュールMの特異クラスになります。
+
+CONSTはモジュールMにのみありますので、例外が発生します。
+```
+module M
+  CONST = "Hello, world"
+end
+
+M.instance_eval(<<-CODE)
+  def say
+    CONST
+  end
+CODE
+
+p M::say
+```
+特異クラス定義のコンテキストでは、ネストの状態はモジュールMの特異クラスになります。
+
+CONSTはモジュールMにのみありますので、例外が発生します。
+```
+module M
+  CONST = "Hello, world"
+end
+
+class << M
+  def say
+    CONST
+  end
+end
+
+p M::say
+```
+module_evalの引数に文字列を指定するとネストの状態はモジュールMになります。
+
+CONSTはモジュールMにありますので値を取得できます。
+```
+module M
+  CONST = "Hello, world"
+end
+
+M.module_eval(<<-CODE)
+  def self.say
+    CONST
+  end
+CODE
+
+p M::say
+```
+
+## 問題(evalのまとめ)
+### 文字列を渡すパターン
+**instance_eval**の引数に文字列を指定するとネストの状態はモジュールMの特異クラスになります。
+
+CONSTはモジュールMにのみありますので、例外が発生します。
+```
+module M
+  CONST = "Hello, world"
+end
+
+M.instance_eval(<<-CODE)
+  def say
+    CONST
+  end
+CODE
+
+p M::say
+```
+
+**module_eval**の引数に文字列を指定するとネストの状態はモジュールMになります。
+
+CONSTはモジュールMにありますので値を取得できます。
+```
+module M
+  CONST = "Hello, world"
+end
+
+M.module_eval(<<-CODE)
+  def self.say
+    CONST
+  end
+CODE
+
+p M::say
+```
+### 解説
+
+
+
 ## 特異クラス
 
 
