@@ -2890,24 +2890,152 @@ irb(main):084:0> p C.ancestors
 ```
 ### 解説
 一度にincludeするか、分けてincludeするかで順番が変わる！！
-## 問題()
+## 問題(ネストの継承)
 ```
+module K
+  CONST = "Good, night"
+  class P
+  end
+end
 
+module K::P::M
+  class C
+    CONST = "Good, evening"
+  end
+end
+
+module M
+  class C
+    CONST = "Hello, world"
+  end
+end
+
+class K::P
+  class M::C
+    p CONST
+  end
+end
 ```
 ### 解説
+クラスK::PにあるクラスM::Cはトップレベルにあるものとは異なります。
+ネスト状態が同じものがあれば、そのレキシカルスコープから定数の探索を行います。
+この問題では定数CONSTが参照しているのはK::P::M::Cで、そのレキシカルスコープにある定数を探索しますので"Good, evening"と表示されます。
+```
+module K
+  class P
+    p Module.nesting # [K::P, K]と表示されます
+  end
+end
 
-## 問題()
+module K::P::M
+  class C
+    p Module.nesting # [K::P::M::C, K::P::M]と表示されます
+  end
+end
+
+module M
+  class C
+    p Module.nesting # [M::C, M]と表示されます
+  end
+end
+
+class K::P
+  class M::C
+    p Module.nesting # [K::P::M::C, K::P]と表示されます
+  end
+end
 ```
 
+## 問題(class_evalのブロックと文字の違い)
+```
+module M
+  CONST = "Hello, world"
+
+  class C
+    def awesome_method
+      CONST
+    end
+  end
+end
+
+p M::C.new.awesome_method
 ```
 ### 解説
+定数の参照はレキシカルに行われます。
 
-## 問題()
+ブロックならネストは変わらない、文字ならselfになる。
+
+なお、呼び出しはselfから呼び出す。定数を探す際はレキシカルになる。
+
+M::C#awesome_methodのコンテキストにCONSTがないため例外が発生します。
 ```
+module M
+  CONST = "Hello, world"
+end
 
+class M::C
+  def awesome_method
+    CONST
+  end
+end
+
+p M::C.new.awesome_method
 ```
-### 解説
+class_evalにブロックを渡した場合は、ブロック内のネストはモジュールMになります。
 
+そのコンテキストから定数を探しますので"Hello, world"が表示されます。
+```
+class C
+end
+
+module M
+  CONST = "Hello, world"
+
+  C.class_eval do
+    def awesome_method
+      CONST
+    end
+  end
+end
+
+p C.new.awesome_method
+```
+class_evalに文字列を渡した場合のネストの状態はクラスCです。
+
+CONSTはクラスCにありますので"Hello, world"が表示されます。
+```
+class C
+  CONST = "Hello, world"
+end
+
+module M
+  C.class_eval(<<-CODE)
+    def awesome_method
+      CONST
+    end
+  CODE
+end
+
+p C.new.awesome_method
+```
+class_evalにブロックを渡した場合は、ブロック内のネストはモジュールMになります。
+
+そのコンテキストから定数を探しますがないため例外が発生します。
+```
+class C
+  CONST = "Hello, world"
+end
+
+module M
+  C.class_eval do
+    def awesome_method
+      CONST
+    end
+  end
+end
+
+p C.new.awesome_method
+```
 ## 問題()
 ```
 
@@ -3197,7 +3325,47 @@ p M::say
 ```
 ### 解説
 
+## 問題(module_evalのブロック)
+```
+mod = Module.new
 
+mod.module_eval do
+  EVAL_CONST = 100
+end
+
+puts "EVAL_CONST is defined? #{mod.const_defined?(:EVAL_CONST)}"
+puts "EVAL_CONST is defined? #{Object.const_defined?(:EVAL_CONST)}"
+```
+### 解説
+定数のスコープはレキシカルに決定されます。
+
+ブロックはネストの状態を変更しないので、module_evalのブロックで定義した定数はこの問題ではトップレベルで定義したことになります。
+
+定数EVAL_CONSTはトップレベルで定義していることになりますので、Objectクラスに定数あることが確認することが出来ます。
+
+また、Moduleクラスのインスタンスには直接、定数は定義されていませんが継承関係を探索して参照することが出来ます。
+
+const_defined?メソッドは第2引数に継承関係を探索するか指定出来るため、この問題では探索を行うかによって結果が変わります。
+```
+mod = Module.new
+
+mod.module_eval do
+  EVAL_CONST = 100
+end
+
+puts Object.const_defined? :EVAL_CONST # trueと表示される
+puts mod.const_defined? :EVAL_CONST # trueと表示される
+
+# 第2引数にfalseを指定すると継承関係まで探索しない
+puts mod.const_defined? :EVAL_CONST, false # falseと表示される
+```
+この問題では指定してない（デフォルト値true）ため探索を行い、定数をどちらも見つけることが出来ます。
+
+結果は次のとおりです。
+```
+EVAL_CONST is defined? true
+EVAL_CONST is defined? true
+```
 
 ## 特異クラス
 
