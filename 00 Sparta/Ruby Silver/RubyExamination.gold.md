@@ -3038,6 +3038,42 @@ p C.new.awesome_method
 ```
 ## 問題()
 ```
+array = ["a", "b", "c"].freeze
+
+array.each do |chr|
+  chr.upcase!
+end
+
+p array
+```
+### 解説
+これは個別に破壊的なので成立する
+## 問題()
+```
+
+```
+### 解説
+
+## 問題()
+```
+
+```
+### 解説
+
+## 問題()
+```
+
+```
+### 解説
+
+## 問題()
+```
+
+```
+### 解説
+
+## 問題()
+```
 
 ```
 ### 解説
@@ -3366,12 +3402,32 @@ puts mod.const_defined? :EVAL_CONST, false # falseと表示される
 EVAL_CONST is defined? true
 EVAL_CONST is defined? true
 ```
+## ensure説の評価値
+irb(main):022:1* def m
+irb(main):023:2*   begin
+irb(main):024:2*     1
+irb(main):025:2*   rescue
+irb(main):026:2*     2
+irb(main):027:2*   else
+irb(main):028:2*     3
+irb(main):029:2*   ensure
+irb(main):030:2*     4
+irb(main):031:1*   end
+irb(main):032:0> end
+=> :m
+irb(main):033:0>
+irb(main):034:0> p m
+3
+=> 3
 
-## 特異クラス
+ensureは無視される
 
+## Rubyのコマンドラインオプション
+例があるのでわかりやすい
 
-## 定数の探索
-
+https://peakp.hatenablog.com/entry/2015/05/06/213912
+## 特殊変数
+https://portaltan.hatenablog.com/entry/2015/10/26/181540
 ## 組み込み
 
 ## 基礎問題
