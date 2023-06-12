@@ -3048,18 +3048,123 @@ p array
 ```
 ### 解説
 これは個別に破壊的なので成立する
-## 問題()
+## 問題(サブモジュール)
 ```
+module M1
+  def method_1
+    __method__
+  end
+end
+
+class C
+  include M1
+end
+
+p C.new.method_1
+
+module M2
+  def method_2
+    __method__
+  end
+end
+
+module M1
+  include M2
+end
+
+p C.new.method_2
 
 ```
 ### 解説
+クラスはサブモジュールを継承ツリーに追加するには条件があります。
 
-## 問題()
+サブモジュールを含めるには、クラスにインクルードする前にサブモジュールを継承ツリーに追加する必要があります。後からモジュールでincludeしてもダメですよ。
+
+次のサンプルプログラムでは、クラスCにモジュールM1をインクルードする前に、サブモジュールM2を継承関係に含めているのでメソッドを呼び出すことができます。
 ```
+module M1
+  def method_1
+    __method__
+  end
+end
 
+module M2
+  def method_2
+    __method__
+  end
+end
+
+module M1
+  include M2
+end
+
+class C
+  include M1 # モジュールM2が既に継承関係にある
+end
+
+p C.new.method_1 # method_1と表示される
+p C.new.method_2 # method_2と表示される
+```
+問題のプログラムでは、メソッドmethod_2は継承ツリーにモジュールM2がないため呼び出すことができず、例外が発生します。
+
+サブモジュールをモジュールの継承ツリーに追加してもクラスCの継承ツリーは更新されません。
+```
+module M1
+  def method_1
+    __method__
+  end
+end
+
+class C
+  include M1
+end
+
+p C.new.method_1
+
+module M2
+  def method_2
+    __method__
+  end
+end
+
+module M1
+  include M2 # サブモジュールM2を追加しても、クラスCの継承ツリーは更新されない
+end
+
+p C.ancestors # [C, M1, Object, Kernel, BasicObject] と表示される
+```
+## 問題(includeのself)
+```
+irb(main):096:1* module M
+irb(main):097:2*   def self.class_m
+irb(main):098:2*     "M.class_m"
+irb(main):099:1*   end
+irb(main):100:0> end
+=> :class_m
+irb(main):101:0>
+irb(main):102:1* class C
+irb(main):103:1*   include M
+irb(main):104:0> end
+=> C
+irb(main):105:0>
+irb(main):106:0> p C.methods.include? :class_m
+false
+=> false
+irb(main):107:0> p M.methods.include? :class_m
+true
 ```
 ### 解説
+問題コードの注意すべき点は以下の通りです。
 
+includeはModuleのインスタンスメソッドをMix-inするメソッドです。
+
+def self.class_mと宣言すると、特異クラスのメソッドになります。
+
+C.methodsはCの特異メソッドを表示します。
+
+よって、Cにはclass_mが追加されません。
+
+Mのメソッドとして追加されたという認識
 ## 問題()
 ```
 
