@@ -3508,6 +3508,7 @@ EVAL_CONST is defined? true
 EVAL_CONST is defined? true
 ```
 ## ensure説の評価値
+```
 irb(main):022:1* def m
 irb(main):023:2*   begin
 irb(main):024:2*     1
@@ -3524,7 +3525,7 @@ irb(main):033:0>
 irb(main):034:0> p m
 3
 => 3
-
+```
 ensureは無視される
 
 ## Rubyのコマンドラインオプション
