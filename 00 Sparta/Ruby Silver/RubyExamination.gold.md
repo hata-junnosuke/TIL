@@ -98,9 +98,13 @@ Dateクラス同士の減算はRationalになります。
 その他、似たクラスの演算を以下にまとめます。
 
 演算	戻り値クラス
+
 Date同士の減算	Rational
+
 Time同士の減算	Float
+
 DateTime同士の減算	Rational
+
 ## 問題(モジュールのnesting)
 ```
 module SuperMod
