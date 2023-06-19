@@ -11,7 +11,7 @@ Ruby Association Certified Ruby Programmer Gold version 3.1（以後Goldで表�
 - Gold受験１ヶ月前にSilverを取得
 
 ## 【1】使用した教材と達成度
-### REx https://rex.libertyfish.co.jp/
+### [REx](https://rex.libertyfish.co.jp/)
 Ruby技術者認定試験を模擬テストできるサイト。
 まずはこのサイトを活用して、Goldの試験レベルを悟りましょう。コテンパンにされても大丈夫です。（私も最初は何もわからず、38点でした。）
 間違えた問題や理解が足りない問題はGitHubでもNotionでもいいのでまとめて試験の直前で見直しができるようにしましょう。
