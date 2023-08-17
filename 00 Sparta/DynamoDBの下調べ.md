@@ -19,7 +19,7 @@ Amazon DynamoDB は、key-value およびドキュメントデータモデルを
  様々な規模で低レイテンシーなデータアクセスが必要なモバイル、ウェブ、ゲーム、広告技術、IoT、その他アプリケーションデータベースとしてDynamoDBを使用されています。NoSQLは大量のデータ利用とシステムの柔軟性を実現したい場合に利用するのがお勧めです。
 
 # Railsとのつながり（Dynamoid）
-
+https://qiita.com/dp-kihara/items/69539c5739a5dcbc46c7
 
 # 参考記事
 - https://www.sunnycloud.jp/column/20210228-01/
