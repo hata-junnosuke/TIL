@@ -58,9 +58,12 @@
 
 ## 11日
 ### 学習内容
-
+- laravel学習開始
+  - MVCの配置、作成方法
+  - laravel tinkerはrails c
+  - Bladeはerb
 ### コメント
-
+- Railsとそんな変わらない。
 ## 12日
 ### 学習内容
 
