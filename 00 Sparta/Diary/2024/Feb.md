@@ -71,7 +71,21 @@
 
 ## 13日
 ### 学習内容
+- laravel学習
+  - ルーティング
+    ```
+    php artisan make:controller ContactFormController --resource→リソースでアクションを一括でコントローラに設定
 
+    Route::prefix('contacts')
+    ->middleware(['auth']) //認証してなければアクセスできない。
+    ->controller( ContactFormController::class )
+    ->name('contact.')
+    ->group(function(){
+     Route::get('/', 'index')->name('index'); //view側でリンクを貼るときに便利（らしい）。
+    });
+    
+    ```
+  - Bladeコンポーネント（$slot） 
 ### コメント
 
 ## 14日
