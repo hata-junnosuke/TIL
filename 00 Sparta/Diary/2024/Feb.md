@@ -90,9 +90,29 @@
 
 ## 14日
 ### 学習内容
-
+- ルーティング
+  ```
+  Route::prefix('contacts')->middleware(['auth'])
+   ->controller( ContactFormController::class )
+   ->name('contacts.')
+   ->group(function(){
+    Route::get('/', 'index')->name('index');
+    Route::get('/create', 'create')->name('create');
+    Route::post('/', 'store')->name('store');
+    Route::get('/{id}', 'show')->name('show');
+    Route::get('/{id}/edit', 'edit')->name('edit');
+   });
+  ```
+  ```
+  GET|HEAD  contacts ....................................... contacts.index › ContactFormController@index
+  POST      contacts ....................................... contacts.store › ContactFormController@store
+  GET|HEAD  contacts/create .............................. contacts.create › ContactFormController@create
+  GET|HEAD  contacts/{id} .................................... contacts.show › ContactFormController@show
+  ```
+  
 ### コメント
-
+- storeがRailsのcreate,createがnewにあたる。注意！
+- フォームの遷移先やリンクの貼り方再確認しよう!
 ## 15日
 ### 学習内容
 
