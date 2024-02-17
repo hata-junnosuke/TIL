@@ -140,7 +140,50 @@ laravelは簡単にページネーションや検索を設定できていいか�
 
 ## 18日
 ### 学習内容
-
+- 非同期通信はasync awaitを使うが関数でくくる必要がある。
+```
+ useEffect(() => {
+    const fetchMedia = async() => {
+      try {
+        const response = await axios.get(`api/searchMedia?searchQuery=${searchQuery}`);
+        console.log(searchQuery);
+      } catch (err){
+        console.log(err);
+      }
+    }
+  },[searchQuery])
+```
+- filterメソッド→条件で絞り込み
+  ```
+   const validResults = searchResults.filter((item) => {
+    return item.media_type === 'movie' || item.media_type === 'tv';
+   });
+  ```
+- レスポンス対応
+　　 ```
+   xsなら12,mdなら9
+   <Grid item xs={12} md={9}>
+  ```
+- try,catchの後、どちらでも使用するfinally
+  ```
+  try {
+      const response = await axios.get(`api/searchMedia?searchQuery=${searchQuery}`);
+      // console.log(response);
+      const searchResults = response.data.results;
+  
+      const validResults = searchResults.filter((item) => {
+        return item.media_type === 'movie' || item.media_type === 'tv';
+      });
+      // console.log(validResults);
+      setResults(validResults);
+  
+    } catch (err){
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  ```
+- 
 ### コメント
 
 ## 19日
