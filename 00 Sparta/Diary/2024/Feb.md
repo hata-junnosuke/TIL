@@ -226,7 +226,32 @@ laravelは簡単にページネーションや検索を設定できていいか�
 
 ## 20日
 ### 学習内容
+- `<Button color="error" onClick={() => handleDelete(review.id)}>削除</Button>`のようにアロー関数にするのは？
+- ルートモデルバインディングっていうらしい。これでidで検索してから削除ではなく、直で削除できるみたい。
+  ```
+  public function destroy(Review $review)
+    {
+        $review->delete();
 
+        return response() ->json(['message'=> '正常にレビューを削除しました。']);
+    }
+  ```
+- 削除の関数
+  ```
+  const handleDelete = async (id) => {
+    if(window.confirm('削除しますか？')){ // 確認ダイアログ
+      try {
+        await laravelAxios.delete(`/api/review/${id}`);
+        const filteredReviews = reviews.filter((review) => review.id !== id); // 削除したレビュー以外を抽出
+        setReviews(filteredReviews);
+        updateAverageRating(filteredReviews);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  }
+  ```
+- 
 ### コメント
 
 ## 21日
