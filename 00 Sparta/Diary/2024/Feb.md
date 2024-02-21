@@ -256,7 +256,14 @@ laravelは簡単にページネーションや検索を設定できていいか�
 
 ## 21日
 ### 学習内容
+- routerでqueryを取得してuseEffectで活用する
+  ```
+  const router = useRouter();
+  const { revviewId } = router.query; // URLからreviewIdを取得
 
+  useEffect(() => {}, [reviewId]) // reviewIdが変更されたら実行
+  ```
+- 
 ### コメント
 
 ## 22日
