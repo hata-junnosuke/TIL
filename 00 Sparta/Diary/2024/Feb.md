@@ -279,7 +279,51 @@ laravelは簡単にページネーションや検索を設定できていいか�
 
 ## 22日
 ### 学習内容
-
+- モデル、マイグレーション、コントローラを同時に作成
+  ```
+      php artisan make:model Comment -mcr コマンドは、Laravel アプリケーションで Comment モデルを作成し、それに関連するマイグレーションファイル、コントローラー、およびリソースコントローラーのアクションを含むコントローラーを生成します。このコマンドのオプションは以下の通りです：
+    
+    - -m はマイグレーションファイルを生成します。
+    - -c はコントローラーを生成します。
+    - -r はリソースコントローラーのアクションを含むコントローラーを生成します。（コントローラ内のindexメソッドなどのメソッドが設定されていない。手動で設定する。）
+  ```
+- 組み合わせの重複を許可しないモデルの作成
+  ```
+  Schema::create('favorites', function (Blueprint $table) {
+      $table->id();
+      $table->string('media_type');
+      $table->bigInteger('media_id');
+      $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+      $table->unique(['media_type', 'media_id', 'user_id']);// 重複を許さない
+      $table->timestamps();
+  });
+  ```
+- ２つのapiを同時に呼び出す方法
+  ```
+  useEffect(async()=> {
+    const fetchReviews = async () => {
+      try {
+        const [reviewResponse, favoriteResponse] = await Promise.all([
+          laravelAxios.get(`/api/reviews/tv/236000`),
+          laravelAxios.get(`/api/favorites/status`),{
+            // getの場合はparamsを使う
+            params: {
+              media_type: "tv",
+              media_id: 236000
+            }
+          }
+        ]) 
+        const fetchReviews = reviewResponse.data;
+        setReviews(fetchReviews);
+        updateAverageRating(fetchReviews);
+        console.log(favoriteResponse);
+        setIsFavorite(favoriteResponse.data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  ``` 
+- 
 ### コメント
 
 ## 23日
