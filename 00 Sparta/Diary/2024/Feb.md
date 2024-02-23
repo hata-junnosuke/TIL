@@ -140,7 +140,7 @@ laravelは簡単にページネーションや検索を設定できていいか�
 
 ## 18日
 ### 学習内容
-- 非同期通信はasync awaitを使うが関数でくくる必要がある。
+- useEffectはasync awaitを使うが関数でくくる必要がある。
 ```
  useEffect(() => {
     const fetchMedia = async() => {
@@ -328,7 +328,34 @@ laravelは簡単にページネーションや検索を設定できていいか�
 
 ## 23日
 ### 学習内容
+- SWRを使ったapi取得（キャッシュを保持できてサーバーへのリクエストを減らせるため表示が早くなる。→リバリデーション）。
+  ```
+  const fetcher = (url) => laravelAxios.get(url).then((res) => res.data)
+  const {data: favoriteItems, error} = useSWR('api/favorites', fetcher)
 
+  if(error){
+    return <div>エラーが発生しました。</div>
+  }
+  ```
+- SWRはリアルタイム性が高く、タブの切り替え、オンラインとオフラインの切り替え、PHPAdiminでデータを変更しても即時で読み込みされる。
+- 初回レンダリングでデータをfetchする前はundefinedになるので、?をつけてエラーを回避する.(オプショナルジェーミング？)
+  ```
+   {favoriteItems?.map((item) => ( //初回のレンダリング時にはfavoriteItemsがnullなので、?をつける
+  ```
+- 配列を作って、pushする。そして足りない要素を追加する。
+  ```
+  foreach ($favorites as $favorite) {
+      // $tmdb_api_key = "https://api.themoviedb.org/3/tv/236000?api_key=" . $api_key;
+      $tmdb_api_key = "https://api.themoviedb.org/3/tv/236000?api_key=a3723e7a2a6202382dc867d512504b64";
+      $response = Http::get($tmdb_api_key);
+      if($response->successful()) {
+          // $details[] = array_merge($response->json(), ['media_type'=> $favorite->media_type]); //media_typeがないのでmergeで追加
+          $details[] = array_merge($response->json(), ['media_type'=> "tv"]); 
+      }
+      // return response()->json($response->json());
+  }
+  ```
+- 
 ### コメント
 
 ## 24日
