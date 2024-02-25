@@ -346,7 +346,7 @@ laravelは簡単にページネーションや検索を設定できていいか�
   ```
   foreach ($favorites as $favorite) {
       // $tmdb_api_key = "https://api.themoviedb.org/3/tv/236000?api_key=" . $api_key;
-      $tmdb_api_key = "https://api.themoviedb.org/3/tv/236000?api_key=a3723e7a2a6202382dc867d512504b64";
+      $tmdb_api_key = "https://api.themoviedb.org/3/tv/236000?api_key=a3723e7a2a6202382dc867d51　　04b64";
       $response = Http::get($tmdb_api_key);
       if($response->successful()) {
           // $details[] = array_merge($response->json(), ['media_type'=> $favorite->media_type]); //media_typeがないのでmergeで追加
@@ -362,7 +362,9 @@ laravelは簡単にページネーションや検索を設定できていいか�
 ### 学習内容
 - PHPの復習
   - デバック
-    - var_dump($hoge)→型を確認
+    - var_dump($hoge);→型を確認
+    - dd($hoge);→処理を止めて、中身を表示
+    - log::debug($hoge);→Logをファサードから読み込んで処理の途中に入れるとlaravel.logに出力される。
   - クラス
     - abstract(抽象クラス)→acstractを関数の前につけると関数の中身を定義できない。具象クラスに記述する。意味合いとしては設定するメソッドを強制する。
     - interface→全て関数の中身を記述できない。具象クラスは複数のインターフェイスを使うことができる。
@@ -372,7 +374,13 @@ laravelは簡単にページネーションや検索を設定できていいか�
 
 ## 25日
 ### 学習内容
-
+- migrateのコマンド
+  - reset→全てのマイグレーションをロールバック
+  - refresh→resetしてからmigrate
+  - fresh→全てのテーブルを削除してからmigrate
+ 
+- PHPUnit（https://zenn.dev/nshiro/books/laravel-test-from-beginner）
+- 
 ### コメント
 
 ## 26日
