@@ -1,6 +1,32 @@
 # 2024年3月
 ## 1日
 ### 学習内容
+- テストでfactoryを使うとき、stateを使うと個別の設定ができる。
+- factoryでbelongs_to関連を作るとき
+  ```
+    'user_id' => User::factory(), で作る
+  　　　　　// 以下にすると余計にユーザが作られる。
+    'user_id' => User::factory()->create()->id, 
+  ``` 
+- 指定する場合は以下のような書き方ができる
+  ```
+  $taro = User::factory()->create(['name' => 'taro']);
+  $posts = Post::factory(2)->for($taro)->create();
+  ```
+- 複数のユーザが複数のポストを持つとき
+  ```
+  $users = User::factory(3)->create()->each(function ($user) {
+    Post::factory(random_int(2, 3))->for($user)->create();
+  });
+  ```
+- DB には登録せずにモデルのインスタンスだけを返す ->make() というメソッドを利用して次のように書くことができます。
+  ```
+  // 例
+  $post = Post::factor()->make();
+  // Post は DB に登録されていないが、裏で User は DB に登録される等。
+  ```
+- ポイントとしては、->actingAs($user) の箇所です。この記述で、ログインした事にしてくれます。
+- 
 
 ### コメント
 
