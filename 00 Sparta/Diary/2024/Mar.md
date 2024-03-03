@@ -40,7 +40,35 @@
 
 ## 3日
 ### 学習内容
-
+- Laravel
+  - (36)PHPUnit には、そんな時の為にデータだけを別メソッドに用意し、そこで用意したデータを利用してテストを実行するという機能があります。それが、dataprovider（データプロバイダ）と呼ばれる機能です。
+    - TestWith→1行目では、TestWith(["0"]) と指定しており、ここで指定した "0" が、テストメソッドのパラメータの $status に渡りテストが1回実行されます。そして2回目は、2行目に指定した TestWith(["1"]) の "1" が $status に渡り、またテストが実行されます。
+      ```
+      use PHPUnit\Framework\Attributes\TestWith; // ← 名前空間のインポートも忘れずに
+  
+      #[TestWith(["0"])]
+      #[TestWith(["1"])]
+      public function test_自分のブログは更新できますよ(string $status) // ← ここも確認
+      {
+          $validData = $this->validData([
+              'status' => $status,
+          ]);
+  
+          // 以下略
+      }
+      ```
+  - (37)検索のテスト→ここは実装する時に再確認
+  - (39)markTestIncomplete()→先にテストをしたい項目を列挙して、漏れがないようにして「未完成」ということを宣言することでテストの書き忘れを防げるかも。。
+    ```
+        public function test_他人様のブログの編集画面は開けない()
+      {
+          $this->markTestIncomplete();
+  
+          $this->markTestIncomplete('急用が入ったので一旦停止'); // コメント付き
+      }
+    ```
+- Next.js
+  - JSの構文復習
 ### コメント
 
 ## 4日
