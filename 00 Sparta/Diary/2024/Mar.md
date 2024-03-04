@@ -73,7 +73,35 @@
 
 ## 4日
 ### 学習内容
+- Laravel
+  - (41)バリデーションテスト
+    ```
+    public function test_ブログ登録時の入力チェック()
+    {
+        $url = route('posts.store');
 
+        $this->login();
+
+        // 何も入力しないで送信した際は、リダイレクトされるのをまずは確認
+        $this->post($url, [])->assertRedirect('/');
+
+        // タイトルの入力チェック
+        $this->post($url, ['title' => ''])->assertInvalid('title');
+        $this->post($url, ['title' => ['aa' => 'bb']])->assertInvalid('title');
+        $this->post($url, ['title' => str_repeat('a', 256)])->assertInvalid('title');
+
+        // status の入力チェック
+        $this->post($url, ['status' => ''])->assertInvalid('status');
+        $this->post($url, ['status' => 'aa'])->assertInvalid('status');
+        $this->post($url, ['status' => '3'])->assertInvalid('status');
+    }
+    ```
+  - (42)ファイルのアップロードテスト→仮のストレージを活用してテストデータが蓄積されないように工夫
+  - (43)CSVのテスト→業務で使うようになったら確認するといい。
+- Next
+  - useState
+  - useRef
+- Tailwind
 ### コメント
 
 ## 5日
