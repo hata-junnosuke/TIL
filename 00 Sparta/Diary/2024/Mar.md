@@ -106,7 +106,26 @@
 
 ## 5日
 ### 学習内容
-
+- Laravel
+  - 単体テスト→GETとかPOSTなど行わずそのクラスが機能しているのかを確かめるテスト。
+  - 例外のテスト→例外が発生することをテストするより、例外発生により起きる現象（メッセージが表示されるなど）をテストする方がいい。
+  - 単体テストと機能テストの違い
+- Next
+  - useReducerはstate更新の仕組みまで定義できる。stateの管理は基本useStateでアプリの規模が大きくなったらuseReducerを使うといい。
+  - useContextはグローバルで管理したい値を定義する。これによりpropsのバケツリレーをせずに済む。
+  - useEffect
+    - クリーンアップ関数の使い所
+      ```
+      useEffect(() => {
+        console.log("mount");
+    
+        return () => {
+          console.log("mount cleanup");
+        };
+      }, []);
+      ```
+  - useLayoutEffectの使い所→画面のチラつき、他のuseEfffectより先に実行したい場合？
+  - Reduxは別で学習。理解できなかった。
 ### コメント
 
 ## 6日
