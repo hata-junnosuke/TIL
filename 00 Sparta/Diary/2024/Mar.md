@@ -139,7 +139,36 @@
 
 ## 7日
 ### 学習内容
-
+- Laravel
+  - 日付のテスト→Carbonを使うことで任意の日付をセットしてテストできる。
+  - メールのテスト
+- Next
+  - useEffectでのクリーンアップ関数→アンマウント時に実行してメモリリークを抑える。
+    ```
+        useEffect(() => {
+        const fetchRooms = async () => {
+          const roomCollectionRef = collection(db, 'rooms');
+          const q = query(roomCollectionRef,
+            where('userId', '==', '7h9fpqRJUZdltBIo8psUuRK0TUo1'),
+            orderBy('createdAt'));
+          const unsubscribe = onSnapshot(q, (snapshot) => {
+            const newRooms: Room[] = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              name: doc.data().name,
+              createdAt: doc.data().createdAt,
+            }));
+            setRooms(newRooms);
+          });
+          // クリーンアップ関数
+          return () => {
+            unsubscribe();
+          }
+        }
+        fetchRooms();
+      }
+      , []);
+    ```
+- firebaseでデプロイ 
 ### コメント
 
 ## 8日
