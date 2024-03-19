@@ -231,12 +231,25 @@
 
 ## 18日
 ### 学習内容
-
+- Redux
+  - storeでstateを保持。
+  - reducerで更新。
+  - useDispatchで値を送る。
+  - useSelectorでUI上で値を取得して表示する。
+  - Redux Toolkit
+    - configureStore
+    - createSlice
 ### コメント
 
 ## 19日
 ### 学習内容
-
+- paiza
+- レンダリング（Next)
+- パフォーマンス
+  - React.memoは頻繁にpropsが更新されるなら使うべきではない。
+  - useCallbackはReact.memoの関数バージョン。カスタムフックを作成したら使うといいらしい。→ちょっと曖昧。
+- Redux復習
+- zustand
 ### コメント
 
 ## 20日
