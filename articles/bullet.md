@@ -5,11 +5,11 @@ Rails開発において、パフォーマンスの問題で最も頻繁に遭遇
 
 本記事では、N+1問題を自動的に検出してくれる強力なgem「Bullet」について、基本的な使い方を解説します。
 
-# 何ができる
+# 何ができるの？
 
 ## Bulletの主要機能
 
-Bulletは、Railsアプリケーションにおいて以下の問題を検出・通知してくれます：
+Bulletは、Railsアプリケーションにおいて以下の問題を検出・通知してくれます。
 
 ### 1. N+1クエリの検出
 ```ruby
@@ -29,9 +29,9 @@ users.each do |user|
 end
 ```
 
-## 通知方法の多様性
+## どうやって通知してくれるの？
 
-Bulletは検出した問題を様々な方法で通知できます：
+Bulletは検出した問題を様々な方法で教えてくれます。
 - ブラウザのJavaScriptアラート
     ![スクリーン ショット 2025-08-29 に 20.31.45 午後.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/2517030/cdb4f51f-c78d-4967-8fbe-c7ba44ddbdbd.png)
 
@@ -49,7 +49,7 @@ Bulletは検出した問題を様々な方法で通知できます：
     /myapp/app/controllers/api/v1/test_n_plus_one_controller.rb:60:in 'Enumerable#map'
     /myapp/app/controllers/api/v1/test_n_plus_one_controller.rb:60:in 'Api::V1::TestNPlusOneController#unused_eager_loading'
     ```
-他にも以下の形式で通知ができるようです！
+他にも以下の形式で通知ができるようです。
 
 - Slack通知
 - メール通知
@@ -61,7 +61,7 @@ Bulletは検出した問題を様々な方法で通知できます：
 
 ## インストール
 
-Gemfileに以下を追加します：
+Gemfileに以下を追加：
 
 ```ruby
 group :development do
@@ -81,7 +81,7 @@ bundle install
 ```bash
 bundle exec rails g bullet:install
 ```
-`config/environments/development.rb`に以下の設定が追加されます：
+`config/environments/development.rb`に以下の設定が追加されます。
 
 ```ruby
 Rails.application.configure do
@@ -101,8 +101,8 @@ end
 ## 基本的な使い方
 
 ### N+1問題の検出と解決
-N+1問題を発生するコードが実行されるときに、先に示した通知方法で警告が表示されます！
-警告の中に解決方法が示されているので、その指示に従うと解決できるようになります！
+N+1問題を発生するコードが実行されるときに、先に示した方法で警告が表示されます。
+警告の中に解決方法が示されているので、その指示に従うと解決できます。
 
 ```ruby
 # app/controllers/posts_controller.rb
@@ -141,7 +141,7 @@ end
 
 # まとめ
 **開発初期からの導入をオススメします！**
-- プロジェクト開始時からBulletを導入することで、N+1問題の蓄積を防ぐことができます！
+- プロジェクト開始時からBulletを導入することで、N+1問題の蓄積を防ぐことができます。
 
 **注意点**
 - すべての警告に対応する必要はないと思います。使ってみるとノイズに感じる場面もありました。そんなときは[セーフリスト](https://github.com/flyerhzm/bullet?tab=readme-ov-file#safe-list)に設定することもできるのでそちらも検討してみてください！
