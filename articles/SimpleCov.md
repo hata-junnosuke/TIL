@@ -1,4 +1,5 @@
-# SimpleCovでテストカバレッジを可視化する
+# SimpleCovの使い方 --Rails開発でテストカバレッジを可視化するgem
+
 
 ## はじめに
 
@@ -17,42 +18,27 @@ SimpleCovを導入すると、以下のことができるようになります�
 ### 1. カバレッジ率の可視化
 
 テスト実行後に、全体のカバレッジ率とファイルごとの詳細が確認できます。
+⬇️　簡単な設定すればこんな感じに確認できます。
+```
+========== Coverage Summary ==========
+Controllers    : 95.31%
+Channels       : 100.0%
+Models         : 100.0%
+Mailers        : 76.0%
+Helpers        : 100.0%
+Jobs           : 100.0%
+Libraries      : 100.0%
+Serializers    : 100.0%
 
-![スクリーンショット：SimpleCovのHTMLレポート](https://raw.githubusercontent.com/simplecov-ruby/simplecov/main/doc/sample_screenshot.png)
+総合カバレッジ: 94.75%
+======================================
+```
 
 ### 2. 未テストコードの特定
 
 テストされていない行が赤色でハイライトされ、どこをテストすべきか一目瞭然です。
 
-```ruby
-class UserService
-  def create_user(params)
-    user = User.new(params)
-    
-    if user.save
-      send_welcome_email(user)  # ✅ 緑：テスト済み
-      true
-    else
-      log_error(user.errors)     # ❌ 赤：未テスト
-      false
-    end
-  end
-end
-```
-
-### 3. グループごとの分析
-
-Controllers、Models、Servicesなど、グループごとにカバレッジを確認できます。
-
-```
-All Files ( 87.43% covered at 3.24 hits/line )
-
-Group        Coverage
-Controllers  95.2%
-Models       82.3%
-Services     76.4%
-Mailers      91.7%
-```
+<img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/2517030/b98c4daf-e12b-41c5-a987-d9138510b10b.png" height="200" width="400">
 
 ## 導入
 
@@ -128,6 +114,9 @@ explorer.exe coverage/index.html
 ```
 
 #### 3. レポートの見方
+| ファイル一覧 | 詳細ビュー |
+|:---:|:---:|
+| ![スクリーンショット 2025-09-03 11.23.42.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/2517030/12ccf4ec-d94a-434e-8fcc-41a8bf1b2585.png) | ![スクリーンショット 2025-09-03 11.36.38.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/2517030/b98c4daf-e12b-41c5-a987-d9138510b10b.png) |
 
 レポートでは以下の情報が確認できます：
 
@@ -190,6 +179,38 @@ SimpleCov.start 'rails' do
 end
 ```
 
+#### テスト終了後のフォーマット設定
+```ruby
+# spec/spec_helper.rb
+require 'simplecov'
+
+SimpleCov.at_exit do
+  SimpleCov.result.format!
+
+  # カバレッジサマリーをコンソールに表示
+  puts "\n\n========== Coverage Summary =========="
+  SimpleCov.result.groups.each do |name, files|
+    coverage = files.covered_percent.round(2)
+    puts "#{name.ljust(15)}: #{coverage}%"
+  end
+  puts "\n総合カバレッジ: #{SimpleCov.result.covered_percent.round(2)}%"
+  puts "======================================"
+end
+
+# ========== Coverage Summary ==========
+# Controllers    : 95.31%
+# Channels       : 100.0%
+# Models         : 100.0%
+# Mailers        : 76.0%
+# Helpers        : 100.0%
+# Jobs           : 100.0%
+# Libraries      : 100.0%
+# Serializers    : 100.0%
+
+# 総合カバレッジ: 94.75%
+# ======================================
+```
+
 ### .gitignoreへの追加
 
 カバレッジレポートはGitで管理する必要がないので、`.gitignore`に追加しておきましょう：
@@ -203,13 +224,13 @@ end
 
 **SimpleCovは導入が簡単で効果が大きいツールです！**
 
-- たった3行の設定で、テストカバレッジが可視化できる
+- たった数行の設定で、テストカバレッジが可視化できる
 - 未テストのコードが一目で分かるので、テストの抜け漏れを防げる
 - チーム全体でカバレッジを意識した開発ができる
 
 **注意点**
 
-- カバレッジ100%を目指すのが目的ではありません。重要なビジネスロジックに集中しましょう
+- カバレッジ100%を目指すのが目的ではありません
 - SimpleCovを有効にするとテスト実行が少し遅くなります
 - `spec_helper.rb`の最上部に記述することを忘れずに！
 
@@ -218,5 +239,4 @@ SimpleCovを導入して、テストの品質を可視化し、より安心し�
 ## 参考リンク
 
 - [SimpleCov 公式リポジトリ](https://github.com/simplecov-ruby/simplecov)
-- [SimpleCov Rails設定ガイド](https://github.com/simplecov-ruby/simplecov#getting-started)
 - [RSpec公式ドキュメント](https://rspec.info/)
