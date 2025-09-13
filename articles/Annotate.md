@@ -1,5 +1,3 @@
-# AnnotateでモデルにDBスキーマ情報を自動追記する
-
 ## はじめに
 
 Railsでモデルファイルを開いたとき、「このモデルにはどんなカラムがあったっけ？」と、わざわざ`schema.rb`を確認したり、DBクライアントを開いたりしていませんか？
@@ -115,7 +113,11 @@ rails db:migrate
 rails db:rollback
 # => ロールバック時も自動更新
 ```
-
+※もしこの設定を無効化したいときは`lib/tasks/auto_annotate_models.rake`の以下の部分を変更してください
+```ruby
+# 初期ではfalseになっています
+'skip_on_db_migrate'   => 'true',
+```
 #### 3. アノテーションの削除
 
 すべてのアノテーションを削除したい場合：
@@ -201,11 +203,10 @@ Annotate.set_defaults(
 - 本番環境では不要なので、`development`グループに入れることを忘れずに
 - Gitでコンフリクトしやすいので、チームで導入タイミングを相談すると良いでしょう
 - カスタマイズ設定はチーム全体で統一することが重要です
+- 特にモデルのカラムが多くなってくると見栄えが良くないかもしれないです
 
 Annotateを導入して、より快適なRails開発環境を構築しましょう！
 
 ## 参考リンク
 
 - [Annotate 公式リポジトリ](https://github.com/ctran/annotate_models)
-- [Annotate 設定オプション一覧](https://github.com/ctran/annotate_models#configuration-in-rails)
-- [Rails Guide - Active Record Migrations](https://guides.rubyonrails.org/active_record_migrations.html)
