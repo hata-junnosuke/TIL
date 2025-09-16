@@ -18,7 +18,7 @@ Rswagを導入すると、以下のことができるようになります。
 
 ブラウザから直接APIを試すことができる、美しいドキュメントUIが使えます。
 
-![Swagger UIの画面イメージ](https://raw.githubusercontent.com/rswag/rswag/master/rswag.png)
+![スクリーン ショット 2025-09-16 に 19.03.52 午後.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/2517030/f07398d3-80db-46a6-a349-ffdedf5e499b.png)
 
 ### 2. OpenAPI（Swagger）仕様のYAML/JSONファイルを配信
 
@@ -182,17 +182,19 @@ components:
 ```ruby
 # config/initializers/rswag_ui.rb
 Rswag::Ui.configure do |c|
-  c.swagger_endpoint '/api-docs/v1/swagger.yaml', 'API V1 Docs'
+  # swagger_endpointで表示するドキュメントのパスと名前を指定
+  c.openapi_endpoint '/api-docs/v1/swagger.yaml', 'API V1 Docs'
   
   # 複数バージョンがある場合
-  # c.swagger_endpoint '/api-docs/v2/swagger.yaml', 'API V2 Docs'
+  # c.openapi_endpoint '/api-docs/v2/swagger.yaml', 'API V2 Docs'
 end
 ```
 
 ```ruby
 # config/initializers/rswag_api.rb
 Rswag::Api.configure do |c|
-  c.swagger_root = Rails.root.join('swagger').to_s
+  # Swaggerファイルが格納されているルートフォルダを指定
+  c.openapi_root = "#{Rails.root}/swagger"
 end
 ```
 
