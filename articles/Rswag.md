@@ -223,110 +223,34 @@ rails s
 
 ブラウザで `http://localhost:3000/api-docs` にアクセスすると、Swagger UIが表示されます。
 
-### よく使うカスタマイズ
-
-#### 認証の設定
-
-Bearer認証を使用する場合：
-
-```yaml
-# swagger/v1/swagger.yaml
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-security:
-  - bearerAuth: []
-
-paths:
-  /api/users/{id}:
-    get:
-      summary: ユーザー詳細を取得
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: 成功
-```
-
-#### レスポンス例の追加
-
-```yaml
-paths:
-  /api/users:
-    get:
-      summary: ユーザー一覧を取得
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-              examples:
-                success:
-                  value:
-                    - id: 1
-                      name: テスト太郎
-                      email: test1@example.com
-                    - id: 2
-                      name: テスト花子
-                      email: test2@example.com
-```
-
-#### UIのカスタマイズ
-
-```ruby
-# config/initializers/rswag_ui.rb
-Rswag::Ui.configure do |c|
-  c.swagger_endpoint '/api-docs/v1/swagger.yaml', 'API V1 Docs'
-  
-  # UIのカスタマイズオプション
-  c.config_object = {
-    defaultModelsExpandDepth: 1,  # モデルの展開レベル
-    defaultModelExpandDepth: 1,   # 個別モデルの展開レベル
-    docExpansion: 'list',         # 'none', 'list', 'full'
-    filter: true,                 # 検索フィルターを表示
-    showRequestDuration: true     # リクエスト時間を表示
-  }
-end
-```
-
 ### その他の活用方法
 
 #### RSpecと組み合わせた自動生成
 
 Rswagには`rswag-specs`というgemもあり、RSpecのテストコードからOpenAPIドキュメントを自動生成することもできます。ただし、独特な記述方法が必要になるため、手動でYAMLを管理する方が柔軟性が高い場合もあります。
 
-#### ドキュメントの分割管理
-
-大規模なAPIの場合、ファイルを分割して管理することも可能：
-
-```yaml
-# swagger/v1/swagger.yaml
-openapi: 3.0.1
-info:
-  title: My API V1
-  version: v1
-
-paths:
-  /api/users:
-    $ref: './paths/users.yaml#/users'
-  /api/posts:
-    $ref: './paths/posts.yaml#/posts'
+#### Basic認証でSwagger UIを保護
+開発環境でSwagger UIへのアクセスを制限したい場合、Basic認証を設定できます：
+```ruby
+# config/initializers/rswag_ui.rb
+Rswag::Ui.configure do |c|
+  # Swagger UIのエンドポイント設定
+  c.openapi_endpoint '/api-docs/v1/swagger.yaml', 'API V1 Docs'
+  
+  # Basic認証を有効化
+  c.basic_auth_enabled = true
+  c.basic_auth_credentials 'username', 'password'
+end
 ```
+これで、http://localhost:3000/api-docs にアクセスすると、ユーザー名とパスワードの入力を求められるようになります。
+注意点：
+この設定はSwagger UIのエンドポイントのみに適用され、APIエンドポイントには影響しません。
+本番環境では環境変数を使用するなど、認証情報の管理に注意してください。
 
+```ruby
+# 環境変数を使用した例
+c.basic_auth_credentials ENV['SWAGGER_USERNAME'], ENV['SWAGGER_PASSWORD']
+```
 ## まとめ
 
 **RswagでインタラクティブなAPIドキュメントを提供しましょう！**
