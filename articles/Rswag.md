@@ -26,33 +26,65 @@ Rswagを導入すると、以下のことができるようになります。
 
 ```yaml
 # swagger/v1/swagger.yaml
+---
 openapi: 3.0.1
 info:
-  title: API V1
+  title: Runmates API
   version: v1
+  description: Runmates - ランニング管理アプリケーションのAPI仕様書
 paths:
-  /api/users:
-    get:
-      summary: ユーザー一覧を取得
+  "/api/v1/auth":
+    post:
+      summary: User registration
+      tags:
+      - Authentication
+      description: 新規ユーザーアカウントを作成します。成功時には確認メールが送信されます。
+      parameters: []
       responses:
         '200':
-          description: 成功
+          description: 登録成功
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    name:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      name:
+                        type:
+                        - string
+                        - 'null'
+                      provider:
+                        type: string
+                      uid:
+                        type: string
+                      created_at:
+                        type: string
+                        format: datetime
+                      updated_at:
+                        type: string
+                        format: datetime
+        '422':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  errors:
+                    type: array
+                    items:
                       type: string
 ```
-
-### 3. 複数バージョンのAPIドキュメント管理
-
-v1、v2など、複数バージョンのAPIドキュメントを同時に管理・表示できます。
 
 ## 導入
 
@@ -264,6 +296,9 @@ c.basic_auth_credentials ENV['SWAGGER_USERNAME'], ENV['SWAGGER_PASSWORD']
 - YAMLファイルの構文エラーに注意（インデントなど）
 - 大規模なAPIの場合はファイル分割を検討すると良いでしょう
 - セキュリティ情報（本番環境のURLなど）の管理に注意
+
+**私の使い方**
+`rswag-specs`で自動生成はしていないのですが、[Swagger Editor](https://editor.swagger.io/)を使うと構文エラーをリアルタイムでチェックしながら作成できて便利です。最近はAIを活用して、APIの仕様を伝えるだけでOpenAPI形式のYAMLを生成してもらうことも多いです。手作業での記述ミスが減り、開発効率が大幅に向上しています！
 
 Rswagを導入して、使いやすいAPIドキュメントを提供しましょう！
 
