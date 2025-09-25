@@ -6,43 +6,33 @@ ZodはTypeScript-firstなスキーマバリデーションライブラリで、R
 
 本記事では、ZodとReact Hook Formを組み合わせた基本的な使い方を解説します。
 
+  <img src="https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/2517030/2be4e38c-e2d3-40b7-981c-ab80eb07240b.png" width="200">
+
 ## 何ができる
 
 ### Zod × React Hook Formの主要機能
 
 この組み合わせで、以下のことが実現できます。
 
-### 1. スキーマから型を自動生成
-
-```typescript
-import { z } from 'zod';
-
-// スキーマ定義
-const userSchema = z.object({
-  name: z.string().min(1, '名前は必須です'),
-  email: z.string().email('有効なメールアドレスを入力してください'),
-  age: z.number().min(18, '18歳以上である必要があります')
-});
-
-// 型を自動推論
-type User = z.infer<typeof userSchema>;
-// { name: string; email: string; age: number; }
-```
-
-### 2. 日本語エラーメッセージの簡単設定
+### 1. 日本語エラーメッセージの簡単設定
 
 ```typescript
 const schema = z.object({
+  email: z.string()
+    .min(1, 'メールアドレスは必須です')
+    .email('有効なメールアドレスを入力してください'),
   password: z.string()
-    .min(8, 'パスワードは8文字以上で入力してください')
-    .regex(/[A-Z]/, '大文字を1文字以上含めてください')
-    .regex(/[0-9]/, '数字を1文字以上含めてください')
+    .min(6, 'パスワードは6文字以上で入力してください')
 });
 ```
 
-### 3. リアルタイムバリデーション
+### 2. リアルタイムバリデーション
 
 入力と同時にバリデーションが実行され、即座にエラーメッセージが表示されます。
+
+### 3. TypeScriptとの完全な統合
+
+スキーマから型を自動生成し、型安全なフォーム開発が可能です。
 
 ## 導入
 
@@ -60,40 +50,52 @@ npm install react-hook-form zod @hookform/resolvers
 yarn add react-hook-form zod @hookform/resolvers
 ```
 
-### 基本設定
-
-プロジェクトで使用するための初期設定は特に必要ありません。コンポーネント内で直接使用できます。
-
 ## 使用方法
 
 ### 基本的な使い方
 
-#### 1. シンプルなログインフォーム
+#### シンプルなログインフォーム
+
+まずは、最もシンプルな例から始めましょう。
 
 ```tsx
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-// スキーマ定義
+// 1. Zodでスキーマを定義
 const loginSchema = z.object({
   email: z.string()
     .min(1, 'メールアドレスは必須です')
     .email('有効なメールアドレスを入力してください'),
   password: z.string()
-    .min(6, 'パスワードは6文字以上で入力してください')
+    .min(6, 'パスワードは6文字以上で入力してください'),
+  confirmPassword: z.string()
+    .min(1, 'パスワード（確認）は必須です')
+})
+// refineで複数フィールドにまたがるバリデーション
+.refine((data) => data.password === data.confirmPassword, {
+  message: 'パスワードが一致しません',
+  path: ['confirmPassword'] // エラーを表示するフィールドを指定
 });
 
-// 型推論
+// 2. z.inferで型を自動生成（型の二重管理が不要！）
 type LoginForm = z.infer<typeof loginSchema>;
+// 自動生成される型:
+// {
+//   email: string;
+//   password: string;
+//   confirmPassword: string;
+// }
 
 export const LoginForm = () => {
+  // 3. React Hook FormにZodのスキーマを連携（zodResolverが橋渡し役）
   const {
     register,
     handleSubmit,
     formState: { errors }
   } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema)
+    resolver: zodResolver(loginSchema) // zodResolverでZodスキーマを渡す
   });
 
   const onSubmit = (data: LoginForm) => {
@@ -110,125 +112,9 @@ export const LoginForm = () => {
           type="email"
           {...register('email')}
         />
+        {/* エラーメッセージの表示 */}
         {errors.email && (
           <p className="error">{errors.email.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="password">パスワード</label>
-        <input
-          id="password"
-          type="password"
-          {...register('password')}
-        />
-        {errors.password && (
-          <p className="error">{errors.password.message}</p>
-        )}
-      </div>
-
-      <button type="submit">ログイン</button>
-    </form>
-  );
-};
-```
-
-#### 2. より複雑なユーザー登録フォーム
-
-```tsx
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
-// スキーマ定義
-const userRegistrationSchema = z.object({
-  name: z.string()
-    .min(1, '名前は必須です')
-    .max(50, '名前は50文字以内で入力してください'),
-  
-  email: z.string()
-    .min(1, 'メールアドレスは必須です')
-    .email('有効なメールアドレスを入力してください'),
-  
-  age: z.string()
-    .transform((val) => Number(val))
-    .pipe(z.number().min(18, '18歳以上である必要があります')),
-  
-  password: z.string()
-    .min(8, 'パスワードは8文字以上で入力してください')
-    .regex(/[A-Z]/, '大文字を1文字以上含めてください')
-    .regex(/[a-z]/, '小文字を1文字以上含めてください')
-    .regex(/[0-9]/, '数字を1文字以上含めてください'),
-  
-  confirmPassword: z.string()
-    .min(1, '確認用パスワードは必須です'),
-  
-  terms: z.boolean()
-    .refine((val) => val === true, {
-      message: '利用規約に同意する必要があります'
-    })
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'パスワードが一致しません',
-  path: ['confirmPassword']
-});
-
-type UserRegistrationForm = z.infer<typeof userRegistrationSchema>;
-
-export const UserRegistrationForm = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting }
-  } = useForm<UserRegistrationForm>({
-    resolver: zodResolver(userRegistrationSchema)
-  });
-
-  const onSubmit = async (data: UserRegistrationForm) => {
-    try {
-      // APIコール
-      await fetch('/api/users', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div>
-        <label htmlFor="name">名前</label>
-        <input
-          id="name"
-          {...register('name')}
-        />
-        {errors.name && (
-          <p className="error">{errors.name.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="email">メールアドレス</label>
-        <input
-          id="email"
-          type="email"
-          {...register('email')}
-        />
-        {errors.email && (
-          <p className="error">{errors.email.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="age">年齢</label>
-        <input
-          id="age"
-          type="number"
-          {...register('age')}
-        />
-        {errors.age && (
-          <p className="error">{errors.age.message}</p>
         )}
       </div>
 
@@ -256,139 +142,213 @@ export const UserRegistrationForm = () => {
         )}
       </div>
 
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            {...register('terms')}
-          />
-          利用規約に同意する
-        </label>
-        {errors.terms && (
-          <p className="error">{errors.terms.message}</p>
-        )}
-      </div>
-
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? '送信中...' : '登録する'}
-      </button>
+      <button type="submit">ログイン</button>
     </form>
   );
 };
 ```
 
-### よく使うバリデーション
+これだけで、以下の機能を持つフォームが完成です！
+- 日本語のエラーメッセージ表示
+- 型安全（z.inferによる自動型生成）
+- パスワード一致確認（refineによる複雑なバリデーション）
 
-#### 条件付きバリデーション
-
-```typescript
-const schema = z.object({
-  accountType: z.enum(['personal', 'business']),
-  companyName: z.string().optional(),
-}).refine(
-  (data) => {
-    if (data.accountType === 'business') {
-      return !!data.companyName && data.companyName.length > 0;
-    }
-    return true;
-  },
-  {
-    message: '法人アカウントの場合、会社名は必須です',
-    path: ['companyName']
-  }
-);
-```
-
-#### 配列のバリデーション
+### よく使うバリデーションパターン
 
 ```typescript
-const schema = z.object({
-  tags: z.array(z.string())
-    .min(1, 'タグを1つ以上選択してください')
-    .max(5, 'タグは5つまでです'),
+// 文字列の各種バリデーション
+const stringSchema = z.object({
+  // 必須項目
+  required: z.string().min(1, '必須項目です'),
   
-  members: z.array(
-    z.object({
-      name: z.string().min(1, '名前は必須です'),
-      email: z.string().email('有効なメールアドレスを入力してください')
-    })
-  ).min(1, 'メンバーを1人以上追加してください')
-});
+  // 文字数制限
+  username: z.string()
+    .min(3, '3文字以上で入力してください')
+    .max(20, '20文字以内で入力してください'),
+  
+  // メールアドレス
+  email: z.string().email('有効なメールアドレスを入力してください'),
+  
+  // URL
+  website: z.string().url('有効なURLを入力してください'),
+
+// 数値のバリデーション
+const numberSchema = z.object({
+  age: z.number()
+    .min(0, '0以上の値を入力してください')
+    .max(120, '120以下の値を入力してください'),
+
+// その他
+const otherSchema = z.object({
+  // チェックボックス
+  terms: z.boolean().refine(val => val === true, {
+    message: '利用規約に同意してください'
+  }),
+  
+  // セレクトボックス
+  role: z.enum(['admin', 'user', 'guest'], {
+    errorMap: () => ({ message: '選択してください' })
+  })
 ```
 
-#### カスタムバリデーション
+## zodResolverの役割
+
+### resolverとは
+
+`zodResolver`は、ZodのスキーマとReact Hook Formを繋ぐ橋渡し役です。これにより、Zodで定義したバリデーションルールをReact Hook Formで使用できるようになります。
+
+### zodResolverの仕組み
 
 ```typescript
-// 日本の郵便番号
-const postalCodeSchema = z.string()
-  .regex(/^\d{3}-?\d{4}$/, '有効な郵便番号を入力してください（例：123-4567）');
+import { zodResolver } from '@hookform/resolvers/zod';
 
-// 電話番号
-const phoneSchema = z.string()
-  .regex(/^0\d{9,10}$/, '有効な電話番号を入力してください（ハイフンなし）');
-
-// カタカナのみ
-const katakanaSchema = z.string()
-  .regex(/^[ァ-ヶー]+$/, 'カタカナで入力してください');
-```
-
-### エラーハンドリングのパターン
-
-#### フォーカス時のエラー制御
-
-```tsx
+// zodResolverの基本的な使い方
 const {
   register,
   handleSubmit,
-  formState: { errors, touchedFields }
-} = useForm<FormData>({
-  resolver: zodResolver(schema),
-  mode: 'onBlur' // フォーカスが外れた時にバリデーション
+  formState: { errors }
+} = useForm({
+  resolver: zodResolver(schema) // ここでZodスキーマを渡す
 });
 
-// エラー表示をタッチされたフィールドのみに限定
-{touchedFields.email && errors.email && (
-  <p className="error">{errors.email.message}</p>
-)}
+// zodResolverがやっていること（イメージ）
+// 1. フォームの値を受け取る
+// 2. Zodスキーマでバリデーション
+// 3. エラーをReact Hook Formの形式に変換
+// 4. errorsオブジェクトとして返す
 ```
 
-#### グローバルエラーの表示
+## z.inferで型を自動生成
 
-```tsx
-const [globalError, setGlobalError] = useState('');
+### inferの詳細
 
-const onSubmit = async (data: FormData) => {
-  try {
-    setGlobalError('');
-    await submitForm(data);
-  } catch (error) {
-    setGlobalError('送信に失敗しました。もう一度お試しください。');
+`z.infer`は、Zodスキーマから自動的にTypeScriptの型を生成する強力な機能です。
+
+```typescript
+import { z } from 'zod';
+
+// スキーマ定義
+const userSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().email(),
+  age: z.number().min(0).max(120),
+  isActive: z.boolean(),
+  tags: z.array(z.string()),
+  metadata: z.object({
+    createdAt: z.date(),
+    updatedAt: z.date()
+  })
+});
+
+// z.inferで型を自動生成
+type User = z.infer<typeof userSchema>;
+/*
+自動生成される型:
+{
+  id: number;
+  name: string;
+  email: string;
+  age: number;
+  isActive: boolean;
+  tags: string[];
+  metadata: {
+    createdAt: Date;
+    updatedAt: Date;
   }
-};
+}
+*/
+```
 
-return (
-  <form onSubmit={handleSubmit(onSubmit)}>
-    {globalError && (
-      <div className="alert alert-error">{globalError}</div>
-    )}
-    {/* フォームフィールド */}
-  </form>
-);
+### inferの便利な使い方
+
+```typescript
+// ネストしたスキーマから部分的に型を取得
+const addressSchema = z.object({
+  street: z.string(),
+  city: z.string(),
+  zipCode: z.string()
+});
+
+const userSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  address: addressSchema // 別のスキーマを使用
+});
+
+// それぞれの型を取得
+type User = z.infer<typeof userSchema>;
+type Address = z.infer<typeof addressSchema>;
+
+// 部分的なスキーマから型を生成
+const nameEmailSchema = userSchema.pick({ name: true, email: true });
+type NameEmail = z.infer<typeof nameEmailSchema>;
+// 結果: { name: string; email: string; }
+```
+
+## refineで複雑なバリデーションを実装
+
+### refineの詳細
+
+`refine`は、Zodの標準バリデーションだけでは実現できない複雑な条件や、複数フィールドにまたがるバリデーションを実装するための機能です。
+
+### refineの実践例
+
+```typescript
+const registrationSchema = z.object({
+  email: z.string().email('有効なメールアドレスを入力してください'),
+  password: z.string()
+    .min(8, 'パスワードは8文字以上で入力してください'),
+  confirmPassword: z.string(),
+  accountType: z.enum(['personal', 'business']),
+  companyName: z.string().optional(),
+  startDate: z.string(),
+  endDate: z.string()
+})
+// パスワードの一致確認
+.refine((data) => data.password === data.confirmPassword, {
+  message: 'パスワードが一致しません',
+  path: ['confirmPassword']
+})
+// 条件付き必須項目
+.refine((data) => {
+  if (data.accountType === 'business') {
+    return !!data.companyName && data.companyName.length > 0;
+  }
+  return true;
+}, {
+  message: '法人アカウントの場合、会社名は必須です',
+  path: ['companyName']
+})
+// 日付の前後関係
+.refine((data) => {
+  const start = new Date(data.startDate);
+  const end = new Date(data.endDate);
+  return start <= end;
+}, {
+  message: '終了日は開始日より後にしてください',
+  path: ['endDate']
+});
+
+// inferで型を生成
+type RegistrationForm = z.infer<typeof registrationSchema>;
 ```
 
 ## まとめ
 
 **ZodとReact Hook Formで、型安全なフォームを簡単に実装できます！**
 
-- スキーマから型が自動生成されるため、型の二重管理が不要
 - 日本語のエラーメッセージを簡単に設定できる
-- 複雑なバリデーションルールも直感的に記述できる
+- `zodResolver`でZodとReact Hook Formをシームレスに連携
+- `z.infer`でスキーマから型を自動生成し、型の二重管理が不要
+- `refine`で複雑なバリデーションルールも直感的に実装
 
 **注意点**
 
-- `transform`を使う場合は、HTMLのinput要素の型に注意（numberでもstringで受け取る）
-- エラーメッセージは具体的でユーザーフレンドリーに
-- パフォーマンスを考慮して、適切な`mode`を選択しましょう
+- `resolver`の設定を忘れるとバリデーションが動作しません
+- `refine`
+  - カスタムしやすいがパフォーマンスに注意（重い処理は避ける）
+  - どのフィールドにエラーを表示するか指定したい場合は`path`指定を忘れずに
 
 ZodとReact Hook Formを活用して、メンテナンスしやすいフォームを実装しましょう！
 
@@ -396,4 +356,5 @@ ZodとReact Hook Formを活用して、メンテナンスしやすいフォー�
 
 - [Zod 公式ドキュメント](https://zod.dev/)
 - [React Hook Form 公式ドキュメント](https://react-hook-form.com/)
+    - [Reresolver: Resolver](https://react-hook-form.com/docs/useform#resolver)
 - [@hookform/resolvers](https://github.com/react-hook-form/resolvers)
