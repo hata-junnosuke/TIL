@@ -1,10 +1,10 @@
 ## はじめに
 
-個人開発でRailsアプリケーションを運用していると、必ずと言っていいほどnginxの設定でつまずきます。「とりあえず動けばいいや」でコピペしていた設定ファイルも、トラブルが起きたときに「これ何してるんだっけ？」となりがち。
+個人開発でRailsアプリケーションを運用していると、nginxの設定で苦労します。「とりあえず動けばいいや」でコピペしていた設定ファイルも、トラブルが起きたときに「これ何してるんだっけ？」となりがちです。
 
-そこで今回は、実際に個人開発で使っているnginx.confを1行ずつ解説してみました。同じような構成の方の参考になれば幸いです。
+そこで今回は、実際に個人開発で使っているnginx.confを1行ずつ解説してみました。
 
-## そもそもnginx（エンジンエックス）って何？
+## そもそもnginxって何？
 
 nginxは「エンジンエックス」と読むWebサーバーソフトウェアです。主に以下の役割を担います。
 
@@ -21,7 +21,9 @@ nginxは「エンジンエックス」と読むWebサーバーソフトウェア
 
 ### なぜnginxが必要なの？
 
-「Railsアプリだけじゃダメなの？」と思うかもしれません。実は以下の理由でnginxを前に置くメリットがあります。
+「Railsアプリだけじゃダメなの？」と思うかもしれません。
+実はRailsで使われているPumaは短時間に多くのリクエストが集中するような本番運用には適していません。
+なので、本番運用ではnginxを前に置く構成が多く使われています。またnginxを置くことで以下のメリットを得ることができます。
 
 - **静的ファイルの配信が高速**：画像やCSSはnginxが直接返すので、Railsの負荷が減る
 - **複数リクエストの同時処理**：大量のアクセスを効率的に捌ける
@@ -30,22 +32,24 @@ nginxは「エンジンエックス」と読むWebサーバーソフトウェア
 
 ## 全体の設定ファイル
 
-まずは設定ファイル全体を見てみましょう。
+まずは設定ファイル全体を見てみましょう。コメント付きで要点を記載しています。
 
 ```nginx
 user  nginx;
-worker_processes  auto;
+worker_processes  auto;  # CPUコア数に自動調整
 
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
 
 events {
-    worker_connections 1024;
+    worker_connections 1024;  # 同時接続数
 }
 
+# HTTP設定
 http {
+  # バックエンドサーバー（Railsアプリ）
   upstream myapp {
-    server unix:///myapp/tmp/sockets/puma.sock;
+    server unix:///myapp/tmp/sockets/puma.sock;  # Unixソケット通信
   }
 
   server {
@@ -55,38 +59,56 @@ http {
     access_log /var/log/nginx/access.log;
     error_log  /var/log/nginx/error.log;
 
-    root /myapp/public;
+    root /myapp/public;  # 静的ファイル配置先
 
-    proxy_connect_timeout 600;
-    proxy_read_timeout    600;
-    proxy_send_timeout    600;
+    # タイムアウト設定（60秒）
+    proxy_connect_timeout 60;
+    proxy_read_timeout    60;
+    proxy_send_timeout    60;
 
-    client_max_body_size 100m;
+    client_max_body_size 100m;  # 最大アップロードサイズ
     error_page 404             /404.html;
-    error_page 505 502 503 504 /500.html;
-    keepalive_timeout 600;
-    
-    location /healthcheck {
-      root   /usr/share/nginx/html;
-      empty_gif;
-      break;
-    }
+    error_page 500 502 503 504 /500.html;
+    keepalive_timeout 60;
 
     location / {
-      try_files $uri @myapp;
+      try_files $uri @myapp;  # 静的ファイル優先、なければRailsへ
     }
 
+    # リバースプロキシ設定
     location @myapp {
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header Host $http_host;
-      proxy_pass http://myapp;
+      proxy_set_header X-Real-IP $remote_addr;  # クライアントIP
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # プロキシチェーン
+      proxy_set_header Host $http_host;  # オリジナルHost
+      proxy_pass http://myapp;  # Railsへ転送
     }
   }
 }
 ```
 
-では、上から順番に解説していきます。
+## 設定ファイルの階層構造を理解しよう
+
+nginx.confは階層構造になっており、これを理解することが設定を読み解く鍵です。
+
+```
+メインコンテキスト
+├── events { }     # イベント処理の設定
+└── http { }       # HTTPに関する設定
+    ├── upstream { }  # バックエンドサーバーの定義
+    └── server { }    # 仮想サーバーの設定
+        ├── location / { }        # パスごとの設定
+        ├── location /healthcheck { }
+        └── location @myapp { }
+```
+
+**各階層の役割：**
+- **メインコンテキスト（一番外側）**：nginx全体の基本設定
+- **eventsブロック**：接続処理に関する設定
+- **httpブロック**：HTTPサーバーとしての設定
+- **serverブロック**：各仮想サーバーの設定（複数のドメインを扱う場合は複数記述可能）
+- **locationブロック**：URLパスごとの細かい設定
+
+この構造を頭に入れて、上から順番に解説していきます。
 
 ## 基本設定（メインコンテキスト）
 
@@ -144,13 +166,22 @@ upstream myapp {
 ```
 
 **`upstream`ブロック**
-- バックエンドのアプリケーションサーバー（Puma）への接続方法を定義
-- `myapp`は任意の名前（後で`proxy_pass`で参照する）
+upstreamを使うメリット：
+- 設定の一元管理：複数のlocationから同じバックエンドを参照する場合、一箇所で管理できる
+- ロードバランシングの準備：将来的に複数のアプリケーションサーバーに分散したくなったとき、簡単に追加できる
 
-**`server unix:///...`**
-- UnixソケットでPumaと通信
-- TCPポート（例：`server 127.0.0.1:3000`）よりも高速
-- 同一サーバー内の通信なのでソケット通信がおすすめ
+```
+# TCPポートの場合
+server 127.0.0.1:3000;
+
+# Unixソケットの場合
+server unix:///myapp/tmp/sockets/puma.sock;
+```
+上記のようにTCPポートで設定することもできるが、Unixを使うと以下のメリットがある。
+Unixソケットのメリット：
+- 高速：ネットワークスタックを経由しないため、オーバーヘッドが少ない
+- セキュア：外部からアクセスできない（ファイルシステム上の通信）
+- ポート番号の管理不要：複数アプリを動かすときにポート番号の重複を気にしなくて良い
 
 ### サーバー設定の基本
 
@@ -179,25 +210,25 @@ server {
 ### タイムアウトとサイズ制限
 
 ```nginx
-proxy_connect_timeout 600;
-proxy_read_timeout    600;
-proxy_send_timeout    600;
+proxy_connect_timeout 60;
+proxy_read_timeout    60;
+proxy_send_timeout    60;
 
 client_max_body_size 100m;
-keepalive_timeout 600;
+keepalive_timeout 60;
 ```
 
-**タイムアウト設定（全て600秒=10分）**
+**タイムアウト設定（全て60秒=1分）**
 - `proxy_connect_timeout`: バックエンドへの接続確立のタイムアウト
 - `proxy_read_timeout`: バックエンドからの応答待ちのタイムアウト
 - `proxy_send_timeout`: バックエンドへのリクエスト送信のタイムアウト
-- 重い処理や大きなファイルアップロードがある場合は長めに設定
+- 通常の処理なら60秒で十分。重い処理がある場合は調整が必要
 
 **`client_max_body_size 100m;`**
 - クライアントからのリクエストボディの最大サイズ
 - 画像や動画のアップロードがある場合は大きめに設定
 
-**`keepalive_timeout 600;`**
+**`keepalive_timeout 60;`**
 - Keep-Alive接続のタイムアウト時間
 - 接続を維持することで、複数のリクエストを効率的に処理
 
@@ -205,31 +236,13 @@ keepalive_timeout 600;
 
 ```nginx
 error_page 404             /404.html;
-error_page 505 502 503 504 /500.html;
+error_page 500 502 503 504 /500.html;
 ```
 
 - 各HTTPステータスコードに対応するエラーページを指定
 - Railsのpublic配下の静的HTMLファイルを表示
 
 ## ロケーション（パス）ごとの設定
-
-### ヘルスチェック用エンドポイント
-
-```nginx
-location /healthcheck {
-    root   /usr/share/nginx/html;
-    empty_gif;
-    break;
-}
-```
-
-**用途**
-- ロードバランサーやモニタリングツールからの死活監視用
-- 軽量な1x1の透明GIFを返すだけなので、アプリケーションに負荷をかけない
-
-**`empty_gif;`**
-- nginxの組み込み機能で、1x1ピクセルの透明GIFを返す
-- アプリケーションサーバーを経由しないので高速
 
 ### メインのルーティング
 
@@ -282,33 +295,114 @@ location @myapp {
 ### 2. 静的ファイルの効率的な配信
 `try_files`ディレクティブにより、静的ファイルはnginxが直接配信。Railsアプリケーションの負荷を軽減します。
 
-### 3. 柔軟なタイムアウト設定
-個人開発では重い処理も発生しがちなので、タイムアウトを長めに設定。本番環境では要件に応じて調整が必要です。
+### 3. 適切なタイムアウト設定
+通常の処理を想定して60秒に設定。長すぎず短すぎない設定で、リソースを効率的に利用できます。
 
-### 4. ヘルスチェックの実装
-`/healthcheck`エンドポイントを用意することで、サービスの死活監視が簡単に実装できます。
+## nginxでこんなこともできる
 
-## トラブルシューティングTips
+基本設定以外にも、nginxではこんなことができます。必要に応じて追加してみてください。
 
-### 502 Bad Gatewayが出る場合
-- Pumaが起動しているか確認
-- ソケットファイルのパスが正しいか確認
-- ソケットファイルの権限を確認
+### HTTPS対応
 
-### 413 Request Entity Too Largeが出る場合
-- `client_max_body_size`を増やす
+```nginx
+server {
+    listen 443 ssl;
+    server_name example.com;
+    
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+}
+```
 
-### タイムアウトエラーが出る場合
-- 各種タイムアウト設定を見直す
-- アプリケーション側の処理を最適化
+### リダイレクト設定
+
+```nginx
+# wwwありに統一
+server {
+    server_name example.com;
+    return 301 https://www.example.com$request_uri;
+}
+```
+
+### IP制限
+
+```nginx
+# 管理画面への接続を特定IPのみ許可
+location /admin {
+    allow 192.168.1.0/24;
+    deny all;
+}
+```
+
+### Basic認証
+
+```nginx
+location /private {
+    auth_basic "Restricted";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+}
+```
+
+### レート制限（DDoS対策）
+
+```nginx
+# IPごとに毎秒10リクエストまで
+limit_req_zone $binary_remote_addr zone=limit:10m rate=10r/s;
+
+location /api/ {
+    limit_req zone=limit burst=5;
+}
+```
+
+### ロードバランシング
+
+```nginx
+# 複数サーバーへの負荷分散
+upstream backend {
+    server app1:3000;
+    server app2:3000;
+    server app3:3000;
+}
+```
+
+### 静的ファイルのキャッシュ設定
+
+```nginx
+# 画像やCSS、JSをブラウザにキャッシュ
+location ~* \.(jpg|css|js)$ {
+    expires 1y;
+    add_header Cache-Control "public";
+}
+```
+
+### WebSocket対応
+
+```nginx
+location /cable {
+    proxy_pass http://myapp;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+}
+```
+
+### 設定変更後は必ず検証
+
+```bash
+# 構文チェック
+sudo nginx -t
+
+# リロード
+sudo nginx -s reload
+```
 
 ## まとめ
 
-nginxの設定は一見複雑に見えますが、各ディレクティブの役割を理解すれば、そんなに難しくありません。個人開発では「とりあえず動く」設定から始めて、必要に応じてチューニングしていくのがおすすめです。
+個人開発では「とりあえず動く」設定から始めて、必要に応じてチューニングしていくのがおすすめです。
+最近ではロードバランサーなどを使うことで nginx を使わなくても良いのではという議論もあるようなので、そちらも追ってみて、アプリに合わせた構成を組んでみてください。
 
 この記事が、nginxの設定で悩んでいる方の参考になれば幸いです。設定をいじる際は必ずバックアップを取ってから試してくださいね！
 
 ## 参考リンク
 
 - [nginx公式ドキュメント](http://nginx.org/en/docs/)
-- [Rails + Puma + Nginxの構成](https://github.com/puma/puma/blob/master/docs/nginx.md)
