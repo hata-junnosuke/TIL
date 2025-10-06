@@ -82,23 +82,6 @@ bundle install
 
 **ポイント**: `require: false` を指定することで、Railsアプリケーションの起動時に読み込まれないようにします。Brakemanはコマンドラインツールとして使うため、自動読み込みは不要です。
 
-## 初期設定（オプション）
-
-設定ファイルを作成しておくと、毎回オプションを指定する手間が省けます:
-
-```bash
-bundle exec brakeman --force-scan > /dev/null
-```
-
-または、手動で `config/brakeman.yml` を作成:
-
-```yaml
----
-:run_all_checks: true
-:min_confidence: 2
-:exit_on_warn: true
-```
-
 # 使用方法
 
 ## 基本的な使い方
@@ -113,17 +96,7 @@ bundle exec brakeman
 
 これだけで、プロジェクト全体のセキュリティスキャンが開始されます。
 
-### 2. すべてのチェック項目を実行
-
-デフォルトでは一部のチェックがスキップされるため、すべての項目をチェックしたい場合:
-
-```bash
-bundle exec brakeman -A
-```
-
-`-A` オプション（または `--run-all-checks`）で、すべての脆弱性チェックが実行されます。
-
-### 3. すべての警告レベルを表示
+### 2. すべての警告レベルを表示
 
 デフォルトでは信頼度が高い警告のみ表示されますが、低信頼度の警告も含めて確認したい場合:
 
@@ -136,7 +109,7 @@ bundle exec brakeman -w1
 - `-w2`: 中信頼度以上（デフォルト）
 - `-w3`: 高信頼度のみ
 
-### 4. HTMLレポートを出力
+### 3. HTMLレポートを出力
 
 ブラウザで見やすい形式でレポートを出力:
 
@@ -145,14 +118,6 @@ bundle exec brakeman -o report.html
 ```
 
 生成された `report.html` をブラウザで開くと、脆弱性の詳細が見やすく表示されます。
-
-### 5. JSONフォーマットで出力
-
-CI/CDツールで解析しやすいJSON形式で出力:
-
-```bash
-bundle exec brakeman -f json -o brakeman-report.json
-```
 
 # よく使うカスタマイズ
 
@@ -241,118 +206,6 @@ q - Quit
 
 この操作で `config/brakeman.ignore` ファイルが生成され、指定した警告は以降表示されなくなります。
 
-## CI/CDへの組み込み
-
-### GitHub Actionsでの設定例
-
-`.github/workflows/brakeman.yml` を作成:
-
-```yaml
-name: Brakeman Security Scan
-
-on:
-  pull_request:
-    branches:
-      - main
-      - develop
-  push:
-    branches:
-      - main
-
-jobs:
-  brakeman:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.2
-          bundler-cache: true
-
-      - name: Run Brakeman
-        run: |
-          bundle exec brakeman -A -w1 -z --no-pager
-```
-
-**オプションの意味**:
-- `-A`: すべてのチェック項目を実行
-- `-w1`: すべての警告レベルを表示
-- `-z`: 警告が見つかった場合、終了コードを1にする（ビルド失敗）
-- `--no-pager`: ページャーを使わずに出力
-
-### CircleCIでの設定例
-
-`.circleci/config.yml` に追加:
-
-```yaml
-version: 2.1
-
-jobs:
-  brakeman:
-    docker:
-      - image: cimg/ruby:3.2
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "Gemfile.lock" }}
-      - run:
-          name: Install dependencies
-          command: bundle install --jobs=4 --retry=3
-      - save_cache:
-          paths:
-            - ./vendor/bundle
-          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
-      - run:
-          name: Run Brakeman
-          command: bundle exec brakeman -A -w1 -z --no-pager
-
-workflows:
-  version: 2
-  test:
-    jobs:
-      - brakeman
-```
-
-## よく使うオプション一覧
-
-```bash
-# すべてのチェック項目を実行
-bundle exec brakeman -A
-
-# 特定の警告レベル以上を表示
-bundle exec brakeman -w1  # すべて
-bundle exec brakeman -w2  # 中信頼度以上（デフォルト）
-bundle exec brakeman -w3  # 高信頼度のみ
-
-# 警告があった場合に終了コードを1にする（CI用）
-bundle exec brakeman -z
-
-# HTML形式で出力
-bundle exec brakeman -o report.html
-
-# JSON形式で出力
-bundle exec brakeman -f json -o report.json
-
-# 特定のファイル/ディレクトリを除外
-bundle exec brakeman --skip-files vendor/,node_modules/
-
-# ページャーなしで出力（CI用）
-bundle exec brakeman --no-pager
-
-# サマリーのみ表示
-bundle exec brakeman --summary
-
-# Rails 5/6/7モードを明示的に指定
-bundle exec brakeman -5  # Rails 5
-bundle exec brakeman -6  # Rails 6
-bundle exec brakeman -7  # Rails 7
-```
-
 # 実践的な使い方
 
 ## 開発フローへの組み込み
@@ -385,7 +238,7 @@ chmod +x .git/hooks/pre-commit
 
 ### 2. 定期的なスキャン
 
-週次や月次で、`-A -w1` オプションを使って徹底的なスキャンを実施します。
+週次や月次で、`-A -w1` オプションを使って徹底的なスキャンを実施します。（チームで分担して実行できればなお良し！）
 
 ```bash
 bundle exec brakeman -A -w1 -o weekly_report.html
@@ -437,7 +290,6 @@ Brakemanは開発効率とセキュリティを両立させる強力なツール
 
 - Railsアプリケーションの脆弱性を自動検出してくれる
 - 静的解析なのでアプリを実行せずにチェック可能
-- CI/CDに組み込むことで、脆弱性の混入を自動的に防げる
 - 設定ファイルや無視リストで、プロジェクトに合わせたカスタマイズが可能
 
 ## 注意点
@@ -455,8 +307,6 @@ Brakemanを導入したら:
 1. まず `-A` オプションで全項目をスキャン
 2. High信頼度の警告から優先的に修正
 3. 設定ファイルを作成してチームで共有
-4. CI/CDに組み込んで自動チェック
-5. 定期的に `-w1` でより厳密なチェックを実施
 
 Brakemanを活用して、セキュアなRailsアプリケーション開発を習慣づけましょう！
 
@@ -464,5 +314,4 @@ Brakemanを活用して、セキュアなRailsアプリケーション開発を�
 
 - [Brakeman公式サイト](https://brakemanscanner.org/)
 - [Brakeman GitHub](https://github.com/presidentbeef/brakeman)
-- [Rails セキュリティガイド](https://railsguides.jp/security.html)
 - [Brakemanの警告タイプ一覧](https://brakemanscanner.org/docs/warning_types/)
