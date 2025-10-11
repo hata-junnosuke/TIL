@@ -35,7 +35,7 @@ $ bundle exec brakeman
 == Brakeman Report ==
 
 Application Path: /path/to/your/app
-Rails Version: 7.0.4
+Rails Version: 8.0.2
 Brakeman Version: 6.0.0
 Scan Date: 2025-10-05 10:00:00 +0900
 Duration: 1.2 seconds
@@ -118,6 +118,8 @@ bundle exec brakeman -o report.html
 ```
 
 生成された `report.html` をブラウザで開くと、脆弱性の詳細が見やすく表示されます。
+![スクリーン ショット 2025-10-11 に 09.03.47 午前.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/2517030/78e3f3d6-308e-441d-bb37-0651fef016ba.png)
+
 
 # よく使うカスタマイズ
 
@@ -298,15 +300,9 @@ Brakemanは開発効率とセキュリティを両立させる強力なツール
 - **誤検知がある**: すべての警告が本当の脆弱性とは限りません。コードを理解した上で判断が必要です
 - **本番環境では不要**: `development` グループに入れることを忘れずに
 - **定期的な更新**: Brakemanを定期的にアップデートして、新しい脆弱性パターンに対応しましょう
-- **他のツールと併用**: RuboCop、RSpec、OWASP ZAPなどと組み合わせて、多層的なセキュリティ対策を実施しましょう
+- **他のツールと併用**: RuboCop、RSpecなどと組み合わせて、多層的なセキュリティ対策を実施しましょう
 
-## 次のステップ
 
-Brakemanを導入したら:
-
-1. まず `-A` オプションで全項目をスキャン
-2. High信頼度の警告から優先的に修正
-3. 設定ファイルを作成してチームで共有
 
 Brakemanを活用して、セキュアなRailsアプリケーション開発を習慣づけましょう！
 
