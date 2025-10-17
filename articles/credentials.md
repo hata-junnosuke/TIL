@@ -1,12 +1,12 @@
 ## 💬 はじめに
 
-Railsで開発していると、APIキーやシークレットキーを`.env`ファイルで管理している人は多いと思います。
+Railsアプリで環境変数を管理するとき、dotenv を使って .env ファイルに書いている方、多いと思います。
 でも、環境が増えるほど `.env.development`, `.env.staging`, `.env.production` ... とファイルが増えて、
 共有や更新がどんどん面倒になっていきませんか？
 
 僕もまさにその状態でした。
 
-「**このキー、誰が最新？**」「**本番の.envはどこ？**」といったカオスを一掃したくて、
+「**このキー、最新？**」「**本番の.envはどこ？**」といったカオスを一掃したくて、
 Rails標準の `credentials.yml.enc` に移行しました。
 
 結果的に、**マスターキー1つを共有するだけで環境変数が全て管理できる**ようになりました。
@@ -114,14 +114,29 @@ bin/rails credentials:edit --environment production
 config/credentials/production.yml.enc
 config/credentials/development.yml.enc
 ```
-
----
+#### ちょっとした小技
+私は、環境ごとにファイルを分けずに、1つの credentials のファイルにまとめて管理しています。
+こんな感じで、環境名をトップレベルキーにして記載しています👇
+```
+development:
+  frontend_url: http://localhost:8000
+production:
+  frontend_url: https://example.jp
+  database_url: mysql2://admin:hogehoge-db@hogehoge-db.c7ykk6e34443p.ap-northeast-1.rds.amazonaws.com
+test:
+  frontend_url: http://localhost:8000
+```
+呼び出すときは、Rails.env を動的に参照することで環境に応じた値を取得できます。
+```
+Rails.application.credentials.dig(Rails.env.to_sym, :frontend_url) 
+```
+こうすることで一つのファイルであらゆる環境に対応をまとめることができます！！
 
 ## 🚀 運用のポイント
 
 * **マスターキー (`config/master.key`) は共有が必要**
 
-  * Gitには含めず、1PasswordやSlack Secretsなどで共有
+  * **Gitには含めてはいけません！**
 * 環境変数としてセットも可能
 
   ```bash
@@ -151,9 +166,9 @@ config/credentials/development.yml.enc
 `.env`は手軽、でもスケールしにくい。
 `credentials`は最初のハードルは少し高いけど、**チーム開発・セキュリティ・CI/CD対応**に強い。
 
-Railsが標準で用意している以上、使わない手はありません。
+Railsが標準で用意している以上、是非とも使いましょう！！
 
-もしあなたのプロジェクトが `.env` 地獄に陥っているなら、
+もしあなたのプロジェクトが `.env` で管理しているなら、
 **「マスターキーひとつで管理する世界」**に移行してみてください。
 きっと開発がシンプルになります。
 
@@ -162,3 +177,4 @@ Railsが標準で用意している以上、使わない手はありません。
 ## 🧰 参考
 
 * [Railsガイド: Rails の Credentials](https://railsguides.jp/security.html#%E8%A8%AD%E5%AE%9A%E3%81%AE%E6%9A%97%E5%8F%B7%E5%8C%96)
+* [パーフェクト Ruby on Rails　【増補改訂版】](https://www.amazon.co.jp/%E3%83%91%E3%83%BC%E3%83%95%E3%82%A7%E3%82%AF%E3%83%88-Ruby-Rails-%E3%80%90%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88%E3%80%91-%E3%81%99%E3%81%8C%E3%82%8F%E3%82%89-%E3%81%BE%E3%81%95%E3%81%AE%E3%82%8A-ebook/dp/B08D3DW7LP/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=2G5BWZQEOOOLT&dib=eyJ2IjoiMSJ9.ZwseYYWTIJ2aQ9QiIRBykw.lRabUJ6b6WgEHdw6YA5buV9BbbR0Mx3Ss1Uotu6LwAo&dib_tag=se&keywords=%E3%83%91%E3%83%BC%E3%83%95%E3%82%A7%E3%82%AF%E3%83%88Rails&qid=1760694870&sprefix=%E3%83%91%E3%83%BC%E3%83%95%E3%82%A7%E3%82%AF%E3%83%88rails%2Caps%2C187&sr=8-1)
