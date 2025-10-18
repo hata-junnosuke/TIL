@@ -1,10 +1,10 @@
 ## 💬 はじめに
 
-Railsアプリで環境変数を管理するとき、dotenv を使って .env ファイルに書いている方、多いと思います。
+Railsアプリで環境変数を管理するとき、dotenv の gem を使って .env ファイルに書いている方、多いと思います。
 でも、環境が増えるほど `.env.development`, `.env.staging`, `.env.production` ... とファイルが増えて、
 共有や更新がどんどん面倒になっていきませんか？
 
-僕もまさにその状態でした。
+私もまさにその状態でした。
 
 「**このキー、最新？**」「**本番の.envはどこ？**」といったカオスを一掃したくて、
 Rails標準の `credentials.yml.enc` に移行しました。
@@ -115,14 +115,14 @@ config/credentials/production.yml.enc
 config/credentials/development.yml.enc
 ```
 #### ちょっとした小技
-私は、環境ごとにファイルを分けずに、1つの credentials のファイルにまとめて管理しています。
+私は、環境ごとにファイルを分けずに、1つの credentials にまとめて管理しています。
 こんな感じで、環境名をトップレベルキーにして記載しています👇
 ```
 development:
   frontend_url: http://localhost:8000
 production:
   frontend_url: https://example.jp
-  database_url: mysql2://admin:hogehoge-db@hogehoge-db.c7ykk6e34443p.ap-northeast-1.rds.amazonaws.com
+  database_url: mysql2://admin:hogehoge-db@hogehoge-db.1223334444.ap-northeast-1.rds.amazonaws.com
 test:
   frontend_url: http://localhost:8000
 ```
@@ -169,7 +169,7 @@ Rails.application.credentials.dig(Rails.env.to_sym, :frontend_url)
 Railsが標準で用意している以上、是非とも使いましょう！！
 
 もしあなたのプロジェクトが `.env` で管理しているなら、
-**「マスターキーひとつで管理する世界」**に移行してみてください。
+**「マスターキーひとつで管理する世界」** に移行してみてください。
 きっと開発がシンプルになります。
 
 ---
