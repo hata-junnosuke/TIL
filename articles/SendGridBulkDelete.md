@@ -111,7 +111,7 @@ Single Sends は放置すると
 
 ### → **1 回で削除できる Single Sends は最大 50 件**
 
-そのため、大量削除の場合は次のように工夫が必要です。
+そのため、大量削除の場合は次のように繰り返しを活用する必要があります。
 
 ```php
 $chunks = array_chunk($allSendIds, 50);
@@ -129,4 +129,24 @@ foreach ($chunks as $chunk) {
 これで安全に大量キャンペーンを削除できます。
 
 # 👀 まとめ
+SendGrid の Single Sends に対して「選択した ID だけをまとめて削除」する方法は、公式ドキュメントでは明確に触れられていません。しかし、SendGrid のライブラリである php-http-client の実装を確認すると、
 
+- `delete(null, ['ids' => [...]]);`という呼び出し方で 任意の複数 ID を選択して削除できる
+- bulk-delete API の **上限 50 件**までの制限がある
+- キャンペーンが溜まりすぎた場合の不具合（送信不能・UI の遅延など）を防ぐため、バッチ処理で定期削除する運用は非常に有効
+
+といった点が明確になります。
+
+実務では “古いキャンペーンの自動クリーンアップ” によってSendGrid 全体の安定稼働につながるため、知っておくと便利なテクニックです。
+使用する場面は少ないかもしれませんが、この記事が困っている方の助けになれば嬉しいです！
+
+## 📚 参考資料
+🔗 SendGrid 公式ドキュメント
+
+Single Sends Bulk Delete（API Reference）
+https://www.twilio.com/docs/sendgrid/api-reference/single-sends/bulk-delete-single-sends
+
+🔗 PHP ライブラリ
+
+php-http-client
+https://github.com/sendgrid/php-http-client/blob/main/lib/Client.php
